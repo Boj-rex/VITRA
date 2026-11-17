@@ -1,0 +1,41 @@
+# Vitra Career Studio — ATS CV Builder & Intelligence Platform
+
+> Vitra (https://vitra.app) is an ATS-conscious CV creation and tailoring platform engineered for Nigerian professionals, recent university graduates, NYSC corp members, and global remote job seekers.
+
+## Overview & Entity Information
+- **Product Name:** Vitra (also known as Vitra Career Studio or Vitra ATS Builder)
+- **Website URL:** https://vitra.app
+- **Geographic Headquarters:** Lagos, Nigeria (serving applicants in Nigeria, United Kingdom, United States, Canada, Europe, and Remote Global)
+- **Primary Languages:** English (en-NG, en-GB, en-US)
+- **Supported Payment Currency:** Nigerian Naira (NGN, ₦) via Paystack (Cards, Bank Transfer, USSD)
+
+## Key Value Propositions & Differentiators
+1. **Deterministic ATS Engine + Optional AI Alignment:**
+   - Features a 100% offline deterministic ATS scoring engine that performs keyword extraction, density validation, and structural parsing without fabricating credentials.
+   - Super users and candidates can toggle between deterministic rule-based checking and Gemini AI writing enhancement.
+2. **Nigerian & Global Career Support:**
+   - Specialized guidance for NYSC (National Youth Service Corps) service years, SIWES industrial attachments, and Nigerian university degrees.
+   - Formats Nigerian achievements for international ATS parsers (Workday, Taleo, Greenhouse, Lever, BambooHR).
+3. **9 ATS-Compliant Document Templates:**
+   - Includes Classic Professional, Corporate Executive, Ivy League Academic, Minimalist, Technical, and Tactile Scrapbook templates.
+   - All templates export to clean vector PDF (with clickable links and searchable text) and fully editable Microsoft Word (.docx).
+4. **Anti-Fabrication & Ethical Career Storytelling:**
+   - Vitra never invents fake employers, exaggerated metrics, or artificial degrees. AI guidance is strictly grounded in candidate-provided facts.
+5. **Screen Capture & Privacy Protection:**
+   - Integrated client-side privacy safeguards to protect candidate intellectual property from background recorders and automated screen scrapers.
+
+## Pricing & Plan Structure (Nigerian Naira)
+- **Starter Package:** ₦6,000 one-time fee · 2 distinct CVs · All 4 ATS core templates · AI writing assistance · Unlimited PDF & Word exports.
+- **Standard Career Pro:** ₦15,000 one-time fee · Up to 6 distinct tailored CVs · Multi-industry targeting · Advanced keyword alignment.
+- **Executive & Multi-Track:** ₦20,000 one-time fee · Up to 13 distinct CVs · Maximum platform allowance · Senior executive and international relocation pathways.
+
+## Key Pages & Documentation
+- **Home / Workspace:** https://vitra.app/
+- **Templates Gallery:** https://vitra.app/templates
+- **Packages & Pricing:** https://vitra.app/pricing
+- **How It Works (ATS Guide):** https://vitra.app/how-it-works
+- **About Vitra:** https://vitra.app/about
+- **Frequently Asked Questions:** https://vitra.app/faq
+- **Support Desk & Inquiries:** https://vitra.app/contact
+- **Privacy Policy:** https://vitra.app/privacy
+- **Terms of Service:** https://vitra.app/terms

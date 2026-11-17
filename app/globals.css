@@ -1,0 +1,1059 @@
+@import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+:root {
+  --vitra-forest: #173B30;
+  --vitra-forest-hover: #244B3E;
+  --vitra-ivory: #F8F4EC;
+  --vitra-moon-white: #FCFBF8;
+  --vitra-sand: #E6D7C2;
+  --vitra-paper: #FFFEFA;
+  --vitra-charcoal: #252821;
+  --vitra-gold: #C4A46B;
+  --vitra-gray: #77786F;
+  --vitra-border: #E2DDD2;
+  --font-calibri: "Calibri", "Segoe UI", Candara, "Carlito", Aptos, -apple-system, BlinkMacSystemFont, Arial, sans-serif;
+  --font-handwriting: 'Caveat', cursive, sans-serif;
+  --font-pixel: 'Press Start 2P', monospace;
+  --font-tech: 'Space Grotesk', sans-serif;
+}
+
+@theme inline {
+  --color-background: var(--vitra-ivory);
+  --color-foreground: var(--vitra-charcoal);
+  --color-forest: var(--vitra-forest);
+  --color-forest-secondary: var(--vitra-forest-hover);
+  --color-ivory: var(--vitra-ivory);
+  --color-paper: var(--vitra-paper);
+  --color-charcoal: var(--vitra-charcoal);
+  --color-gold: var(--vitra-gold);
+  --color-neutral-gray: var(--vitra-gray);
+  --font-sans: var(--font-calibri);
+  --font-serif: var(--font-calibri);
+  --font-handwriting: var(--font-handwriting);
+  --font-pixel: var(--font-pixel);
+  --font-tech: var(--font-tech);
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+html,
+body,
+input,
+button,
+select,
+textarea,
+optgroup {
+  font-family: var(--font-calibri);
+}
+
+/* Prevent iOS Safari from auto-zooming when focusing form inputs (< 16px font-size triggers auto-zoom) */
+@media screen and (max-width: 768px) {
+
+  input:not([type="checkbox"]):not([type="radio"]),
+  select,
+  textarea {
+    font-size: 16px !important;
+  }
+
+  /* iOS Safari background-attachment: fixed causes background elements to render at document scale, looking heavily zoomed in */
+  body,
+  .bg-moon-sand,
+  .bg-drafting-grid {
+    background-attachment: scroll !important;
+  }
+}
+
+.font-handwriting {
+  font-family: 'Caveat', cursive, sans-serif;
+}
+
+.font-pixel {
+  font-family: 'Press Start 2P', monospace;
+  image-rendering: pixelated;
+}
+
+.font-tech {
+  font-family: 'Space Grotesk', sans-serif;
+}
+
+/* Moon White and Sand Well-Blended Gradient with Subtle Low-Opacity Drafting Grid */
+body,
+.bg-moon-sand,
+.bg-drafting-grid {
+  background-color: #F8F4EC;
+  background-image:
+    /* Minor 32px Grid Lines (Reduced Opacity) */
+    linear-gradient(to right, rgba(175, 153, 125, 0.06) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(175, 153, 125, 0.06) 1px, transparent 1px),
+    /* Major 128px Drafting Grid Accents (Softened) */
+    linear-gradient(to right, rgba(150, 128, 100, 0.11) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(150, 128, 100, 0.11) 1px, transparent 1px),
+    /* Well-Blended Moon White & Sand Radiant Gradients */
+    radial-gradient(ellipse 100% 70% at 50% -10%, rgba(255, 255, 255, 0.95) 0%, rgba(253, 250, 245, 0.4) 60%, transparent 100%),
+    radial-gradient(ellipse 70% 50% at 90% 90%, rgba(224, 206, 182, 0.45) 0%, transparent 70%),
+    linear-gradient(165deg, #FCFBF8 0%, #F8F4EC 30%, #F0E7D8 65%, #E6D7C2 100%);
+  background-size: 32px 32px, 32px 32px, 128px 128px, 128px 128px, 100% 100%, 100% 100%, 100% 100%;
+  background-attachment: fixed;
+}
+
+.bg-moon-sand-subtle-grid {
+  background-color: #F8F4EC;
+  background-image:
+    linear-gradient(to right, rgba(175, 153, 125, 0.06) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(175, 153, 125, 0.06) 1px, transparent 1px),
+    radial-gradient(ellipse 100% 70% at 50% -10%, rgba(255, 255, 255, 0.95) 0%, rgba(253, 250, 245, 0.4) 60%, transparent 100%),
+    radial-gradient(ellipse 70% 50% at 90% 90%, rgba(224, 206, 182, 0.45) 0%, transparent 70%),
+    linear-gradient(165deg, #FCFBF8 0%, #F8F4EC 30%, #F0E7D8 65%, #E6D7C2 100%);
+  background-size: 32px 32px, 32px 32px, 100% 100%, 100% 100%, 100% 100%;
+  background-attachment: fixed;
+}
+
+/* Background-Adaptive Color Text (Dynamically inverts/adapts based on background colors) */
+.text-bg-adaptive {
+  color: #ffffff;
+  mix-blend-mode: difference;
+}
+
+.text-bg-adaptive-subtle {
+  color: rgba(255, 255, 255, 0.92);
+  mix-blend-mode: difference;
+}
+
+/* ==============================================================
+   TACTILE & REACTIVE BUTTON & CONTROL SYSTEM
+   ============================================================== */
+button,
+[role="button"],
+input[type="button"],
+input[type="submit"],
+.interactive-tap,
+.btn-tactile {
+  transition: transform 0.12s cubic-bezier(0.34, 1.56, 0.64, 1),
+    box-shadow 0.12s cubic-bezier(0.34, 1.56, 0.64, 1),
+    background-color 0.15s ease,
+    border-color 0.15s ease,
+    filter 0.15s ease;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+button:not(:disabled):not([aria-disabled="true"]):hover,
+[role="button"]:not([aria-disabled="true"]):hover,
+.interactive-tap:hover,
+.btn-tactile:hover {
+  cursor: pointer;
+}
+
+/* Mechanical Button Plunge: Real Physical Click Resistance & Compression */
+button:not(:disabled):not([aria-disabled="true"]):active,
+[role="button"]:not([aria-disabled="true"]):active,
+.interactive-tap:active,
+.btn-tactile:active {
+  transform: translateY(2px) scale(0.98);
+}
+
+.bg-stamp-interactive {
+  transition: transform 0.18s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.15s ease, filter 0.15s ease;
+  user-select: none;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.bg-stamp-interactive:hover {
+  transform: translateY(-2px) scale(1.04);
+  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.15));
+}
+
+.bg-stamp-interactive:active {
+  transform: translateY(1.5px) scale(0.96);
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.1));
+}
+
+/* Lined Notebook Paper Canvas */
+.bg-ruled-paper {
+  background-color: #ffffff;
+  background-image: linear-gradient(rgba(190, 208, 230, 0.32) 1px, transparent 1px);
+  background-size: 100% 32px;
+}
+
+/* Hand-drawn sketch border */
+.border-sketch {
+  border: 2px solid #eb5757;
+  border-radius: 255px 15px 225px 15px/15px 225px 15px 255px;
+}
+
+.border-sketch-dark {
+  border: 2px solid #252821;
+  border-radius: 255px 15px 225px 15px/15px 225px 15px 255px;
+}
+
+/* Washi Tape Strips with realistic jagged torn edges */
+.washi-tape-blue {
+  background: rgba(175, 195, 245, 0.78);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+  clip-path: polygon(0% 0%, 5% 50%, 0% 100%, 100% 100%, 95% 50%, 100% 0%);
+}
+
+.washi-tape-yellow {
+  background: rgba(254, 240, 138, 0.88);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+  clip-path: polygon(0% 0%, 5% 50%, 0% 100%, 100% 100%, 95% 50%, 100% 0%);
+}
+
+.washi-tape-pink {
+  background: rgba(251, 207, 232, 0.88);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+  clip-path: polygon(0% 0%, 5% 50%, 0% 100%, 100% 100%, 95% 50%, 100% 0%);
+}
+
+.washi-tape-white {
+  background: rgba(255, 255, 255, 0.75);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+  clip-path: polygon(0% 0%, 5% 50%, 0% 100%, 100% 100%, 95% 50%, 100% 0%);
+}
+
+/* Physical Neobrutalist Sticker Shadows with Reactive Compression */
+.shadow-sticker {
+  box-shadow: 3px 3px 0px rgba(0, 0, 0, 0.95);
+  transition: transform 0.12s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.12s ease;
+}
+
+.shadow-sticker:hover {
+  box-shadow: 4px 4px 0px rgba(0, 0, 0, 0.95);
+}
+
+.shadow-sticker:active {
+  box-shadow: 1px 1px 0px rgba(0, 0, 0, 0.95);
+}
+
+.shadow-sticker-sm {
+  box-shadow: 2px 2px 0px rgba(0, 0, 0, 0.95);
+  transition: transform 0.12s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.12s ease;
+}
+
+.shadow-sticker-sm:hover {
+  box-shadow: 3px 3px 0px rgba(0, 0, 0, 0.95);
+}
+
+.shadow-sticker-sm:active {
+  box-shadow: 0.5px 0.5px 0px rgba(0, 0, 0, 0.95);
+}
+
+.shadow-paper {
+  box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(0, 0, 0, 0.1);
+}
+
+/* Polaroid Photo Card */
+.polaroid-card {
+  background: #ffffff;
+  padding: 10px 10px 24px 10px;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15), 0 2px 6px rgba(0, 0, 0, 0.1);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+body {
+  background-color: var(--vitra-ivory);
+  color: var(--vitra-charcoal);
+  font-family: var(--font-calibri);
+  line-height: 1.55;
+}
+
+.font-editorial {
+  font-family: var(--font-calibri);
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+/* Anti-Screenshot & Screen Capture Protection */
+.prevent-select,
+.select-none {
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+}
+
+img,
+canvas {
+  -webkit-user-drag: none;
+  user-drag: none;
+  pointer-events: auto;
+}
+
+/* ==============================================================
+   75% OBSIDIAN BLACK THEME (Volcanic Slate Obsidian)
+   ============================================================== */
+html.dark,
+body.dark,
+[data-theme="dark"],
+.dark {
+  --vitra-forest: #0D261E;
+  --vitra-forest-hover: #173B30;
+  --vitra-ivory: #141722;
+  --vitra-moon-white: #181C28;
+  --vitra-sand: #242A3D;
+  --vitra-paper: #191D2B;
+  --vitra-charcoal: #FFFFFF;
+  --vitra-gold: #F5D485;
+  --vitra-gray: #94A3B8;
+  --vitra-border: #333C52;
+  color-scheme: dark;
+}
+
+html.dark body,
+html.dark .bg-drafting-grid,
+html.dark .bg-moon-sand,
+body.dark,
+body.dark .bg-drafting-grid,
+body.dark .bg-moon-sand,
+.dark .bg-drafting-grid,
+.dark .bg-moon-sand,
+[data-theme="dark"] body,
+[data-theme="dark"] .bg-drafting-grid,
+[data-theme="dark"] .bg-moon-sand {
+  background-color: #141722 !important;
+  background-image:
+    /* Minor 32px Obsidian Grid Lines (Crisp Whisper White) */
+    linear-gradient(to right, rgba(255, 255, 255, 0.05) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.05) 1px, transparent 1px),
+    /* Major 128px Obsidian Drafting Grid Accents */
+    linear-gradient(to right, rgba(255, 255, 255, 0.09) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.09) 1px, transparent 1px),
+    /* Deep 75% Obsidian Volcanic Mineral Gradient */
+    radial-gradient(ellipse 100% 70% at 50% -10%, rgba(38, 45, 66, 0.45) 0%, rgba(20, 23, 34, 0.85) 60%, transparent 100%),
+    radial-gradient(ellipse 70% 50% at 90% 90%, rgba(32, 38, 56, 0.5) 0%, transparent 70%),
+    linear-gradient(165deg, #181C28 0%, #141722 45%, #10121A 100%) !important;
+  background-size: 32px 32px, 32px 32px, 128px 128px, 128px 128px, 100% 100%, 100% 100%, 100% 100%;
+  background-attachment: fixed;
+  color: #F1F5F9 !important;
+}
+
+/* Central Ruled Notebook in 75% Obsidian Mode */
+html.dark .bg-ruled-paper,
+body.dark .bg-ruled-paper,
+.dark .bg-ruled-paper,
+[data-theme="dark"] .bg-ruled-paper {
+  background-color: #191D2B !important;
+  background-image: linear-gradient(rgba(255, 255, 255, 0.045) 1px, transparent 1px) !important;
+  background-size: 100% 32px;
+  border-color: #2D3548 !important;
+  color: #F1F5F9 !important;
+}
+
+html.dark .shadow-paper,
+body.dark .shadow-paper,
+.dark .shadow-paper,
+[data-theme="dark"] .shadow-paper {
+  box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.75), 0 0 0 1px rgba(255, 255, 255, 0.08) !important;
+}
+
+/* Scrapbook Navbar in 75% Obsidian Dark - Completely Seamless & Outline-Free */
+html.dark nav,
+body.dark nav,
+.dark nav,
+[data-theme="dark"] nav {
+  background-color: transparent !important;
+  background-image: none !important;
+  border: none !important;
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+html.dark nav a:not([class*="dark:bg-white"]),
+body.dark nav a:not([class*="dark:bg-white"]),
+.dark nav a:not([class*="dark:bg-white"]) {
+  background-color: transparent !important;
+  border: none !important;
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+html.dark nav a:not([class*="dark:bg-white"]):hover,
+body.dark nav a:not([class*="dark:bg-white"]):hover,
+.dark nav a:not([class*="dark:bg-white"]):hover {
+  background-color: rgba(255, 255, 255, 0.08) !important;
+}
+
+/* Surface containers & Cards in 75% Obsidian Dark */
+html.dark .bg-white:not([data-keep-white]):not([class*="dark:"]),
+html.dark [class~="bg-white"]:not([data-keep-white]):not([class*="dark:"]),
+html.dark .bg-\[\#FFFEFA\]:not([data-keep-white]):not([class*="dark:"]),
+html.dark .bg-\[\#FAF8F5\]:not([data-keep-white]):not([class*="dark:"]),
+html.dark .bg-\[\#FAF7F0\]:not([data-keep-white]):not([class*="dark:"]),
+html.dark [class~="bg-[#FFFEFA]"]:not([data-keep-white]):not([class*="dark:"]),
+html.dark [class~="bg-[#FAF8F5]"]:not([data-keep-white]):not([class*="dark:"]),
+html.dark [class~="bg-[#FAF7F0]"]:not([data-keep-white]):not([class*="dark:"]),
+body.dark .bg-white:not([data-keep-white]):not([class*="dark:"]),
+body.dark [class~="bg-white"]:not([data-keep-white]):not([class*="dark:"]),
+.dark .bg-white:not([data-keep-white]):not([class*="dark:"]),
+.dark [class~="bg-white"]:not([data-keep-white]):not([class*="dark:"]),
+[data-theme="dark"] .bg-white:not([data-keep-white]):not([class*="dark:"]),
+[data-theme="dark"] [class~="bg-white"]:not([data-keep-white]):not([class*="dark:"]),
+[data-theme="dark"] [class~="bg-[#FFFEFA]"]:not([data-keep-white]):not([class*="dark:"]),
+[data-theme="dark"] [class~="bg-[#FAF8F5]"]:not([data-keep-white]):not([class*="dark:"]),
+html.dark .bg-\[\#F6F3ED\]:not([data-keep-white]):not([class*="dark:"]),
+html.dark [class~="bg-[#F6F3ED]"]:not([data-keep-white]):not([class*="dark:"]),
+html.dark .bg-\[\#EAE5DA\]:not([data-keep-white]):not([class*="dark:"]),
+html.dark [class~="bg-[#EAE5DA]"]:not([data-keep-white]):not([class*="dark:"]),
+html.dark .bg-\[\#F3EFE6\]:not([data-keep-white]):not([class*="dark:"]),
+html.dark [class~="bg-[#F3EFE6]"]:not([data-keep-white]):not([class*="dark:"]),
+html.dark .bg-\[\#F9F7F2\]:not([data-keep-white]):not([class*="dark:"]),
+html.dark [class~="bg-[#F9F7F2]"]:not([data-keep-white]):not([class*="dark:"]),
+html.dark .bg-\[\#E6E0D5\]:not([data-keep-white]):not([class*="dark:"]),
+html.dark [class~="bg-[#E6E0D5]"]:not([data-keep-white]):not([class*="dark:"]),
+[data-theme="dark"] .bg-\[\#F6F3ED\]:not([data-keep-white]):not([class*="dark:"]),
+[data-theme="dark"] [class~="bg-[#F6F3ED]"]:not([data-keep-white]):not([class*="dark:"]),
+[data-theme="dark"] .bg-\[\#EAE5DA\]:not([data-keep-white]):not([class*="dark:"]),
+[data-theme="dark"] [class~="bg-[#EAE5DA]"]:not([data-keep-white]):not([class*="dark:"]),
+[data-theme="dark"] .bg-\[\#F3EFE6\]:not([data-keep-white]):not([class*="dark:"]),
+[data-theme="dark"] [class~="bg-[#F3EFE6]"]:not([data-keep-white]):not([class*="dark:"]),
+[data-theme="dark"] .bg-\[\#F9F7F2\]:not([data-keep-white]):not([class*="dark:"]),
+[data-theme="dark"] [class~="bg-[#F9F7F2]"]:not([data-keep-white]):not([class*="dark:"]),
+[data-theme="dark"] .bg-\[\#E6E0D5\]:not([data-keep-white]):not([class*="dark:"]),
+[data-theme="dark"] [class~="bg-[#E6E0D5]"]:not([data-keep-white]):not([class*="dark:"]) {
+  background-color: #1E2333 !important;
+}
+
+/* Neutral Border Adapters in 75% Obsidian Dark */
+html.dark .border-\[\#E2DDD2\]:not([data-keep-white]):not([data-keep-white] *):not(.cv-document-sheet):not(.cv-document-sheet *),
+html.dark [class*="border-[#E2DDD2]"]:not([data-keep-white]):not([data-keep-white] *):not(.cv-document-sheet):not(.cv-document-sheet *),
+html.dark .border-\[\#D4CFC3\]:not([data-keep-white]):not([data-keep-white] *),
+html.dark [class*="border-[#D4CFC3]"]:not([data-keep-white]):not([data-keep-white] *),
+html.dark .border-\[\#E6E0D5\]:not([data-keep-white]):not([data-keep-white] *),
+html.dark [class*="border-[#E6E0D5]"]:not([data-keep-white]):not([data-keep-white] *),
+html.dark .border-\[\#CFC9BC\]:not([data-keep-white]):not([data-keep-white] *),
+html.dark [class*="border-[#CFC9BC]"]:not([data-keep-white]):not([data-keep-white] *),
+html.dark .border-\[\#DDD7C9\]:not([data-keep-white]):not([data-keep-white] *),
+html.dark [class*="border-[#DDD7C9]"]:not([data-keep-white]):not([data-keep-white] *),
+[data-theme="dark"] .border-\[\#E2DDD2\]:not([data-keep-white]):not([data-keep-white] *):not(.cv-document-sheet):not(.cv-document-sheet *),
+[data-theme="dark"] [class*="border-[#E2DDD2]"]:not([data-keep-white]):not([data-keep-white] *):not(.cv-document-sheet):not(.cv-document-sheet *),
+[data-theme="dark"] .border-\[\#D4CFC3\]:not([data-keep-white]):not([data-keep-white] *),
+[data-theme="dark"] [class*="border-[#D4CFC3]"]:not([data-keep-white]):not([data-keep-white] *),
+[data-theme="dark"] .border-\[\#E6E0D5\]:not([data-keep-white]):not([data-keep-white] *),
+[data-theme="dark"] [class*="border-[#E6E0D5]"]:not([data-keep-white]):not([data-keep-white] *),
+[data-theme="dark"] .border-\[\#CFC9BC\]:not([data-keep-white]):not([data-keep-white] *),
+[data-theme="dark"] [class*="border-[#CFC9BC]"]:not([data-keep-white]):not([data-keep-white] *) {
+  border-color: #333C52 !important;
+}
+
+/* Secondary Container Wells & Sub-cards */
+html.dark .bg-\[\#F3F4F6\],
+html.dark [class*="bg-[#F3F4F6]"],
+html.dark .bg-gray-50,
+html.dark .bg-gray-100,
+[data-theme="dark"] .bg-\[\#F3F4F6\],
+[data-theme="dark"] [class*="bg-[#F3F4F6]"] {
+  background-color: #242A3D !important;
+}
+
+html.dark .bg-\[\#E8ECEF\],
+html.dark [class*="bg-[#E8ECEF]"],
+[data-theme="dark"] .bg-\[\#E8ECEF\],
+[data-theme="dark"] [class*="bg-[#E8ECEF]"] {
+  background-color: #283046 !important;
+}
+
+/* Pastel Cards & Badges in 75% Obsidian Dark (Deep Volcanic Wells with High Contrast) */
+html.dark .bg-\[\#D1FAE5\]:not([class*="dark:bg-"]),
+html.dark [class*="bg-[#D1FAE5]"]:not([class*="dark:bg-"]),
+html.dark .bg-\[\#A7F3D0\]:not([class*="dark:bg-"]),
+html.dark [class*="bg-[#A7F3D0]"]:not([class*="dark:bg-"]),
+[data-theme="dark"] .bg-\[\#D1FAE5\]:not([class*="dark:bg-"]),
+[data-theme="dark"] [class*="bg-[#D1FAE5]"]:not([class*="dark:bg-"]) {
+  background-color: #0E2E23 !important;
+  border-color: #174233 !important;
+}
+
+html.dark .bg-\[\#FEF3C7\]:not([class*="dark:bg-"]),
+html.dark [class*="bg-[#FEF3C7]"]:not([class*="dark:bg-"]),
+html.dark .bg-\[\#FEF9C3\]:not([class*="dark:bg-"]),
+html.dark [class*="bg-[#FEF9C3]"]:not([class*="dark:bg-"]),
+[data-theme="dark"] .bg-\[\#FEF3C7\]:not([class*="dark:bg-"]),
+[data-theme="dark"] [class*="bg-[#FEF3C7]"]:not([class*="dark:bg-"]),
+[data-theme="dark"] .bg-\[\#FEF9C3\]:not([class*="dark:bg-"]),
+[data-theme="dark"] [class*="bg-[#FEF9C3]"]:not([class*="dark:bg-"]) {
+  background-color: #252110 !important;
+  border-color: #4D3914 !important;
+}
+
+html.dark .bg-\[\#E0F2FE\]:not([class*="dark:bg-"]),
+html.dark [class*="bg-[#E0F2FE]"]:not([class*="dark:bg-"]),
+html.dark .bg-\[\#DBEAFE\]:not([class*="dark:bg-"]),
+html.dark [class*="bg-[#DBEAFE]"]:not([class*="dark:bg-"]),
+[data-theme="dark"] .bg-\[\#E0F2FE\]:not([class*="dark:bg-"]),
+[data-theme="dark"] [class*="bg-[#E0F2FE]"]:not([class*="dark:bg-"]) {
+  background-color: #0F2942 !important;
+  border-color: #1A3E61 !important;
+}
+
+html.dark .bg-\[\#FCE7F3\]:not([class*="dark:bg-"]),
+html.dark [class*="bg-[#FCE7F3]"]:not([class*="dark:bg-"]),
+html.dark .bg-\[\#FEE2E2\]:not([class*="dark:bg-"]),
+html.dark [class*="bg-[#FEE2E2]"]:not([class*="dark:bg-"]),
+[data-theme="dark"] .bg-\[\#FCE7F3\]:not([class*="dark:bg-"]),
+[data-theme="dark"] [class*="bg-[#FCE7F3]"]:not([class*="dark:bg-"]) {
+  background-color: #361324 !important;
+  border-color: #541F38 !important;
+}
+
+html.dark .bg-\[\#EDE9FE\]:not([class*="dark:bg-"]),
+html.dark [class*="bg-[#EDE9FE]"]:not([class*="dark:bg-"]),
+[data-theme="dark"] .bg-\[\#EDE9FE\]:not([class*="dark:bg-"]),
+[data-theme="dark"] [class*="bg-[#EDE9FE]"]:not([class*="dark:bg-"]) {
+  background-color: #271945 !important;
+  border-color: #432A78 !important;
+}
+
+html.dark .border-sketch,
+body.dark .border-sketch,
+.dark .border-sketch,
+[data-theme="dark"] .border-sketch {
+  background-color: #1E2333 !important;
+  border-color: #EF4444 !important;
+}
+
+html.dark .polaroid-card,
+body.dark .polaroid-card,
+.dark .polaroid-card,
+[data-theme="dark"] .polaroid-card {
+  background-color: #1E2333 !important;
+  border-color: #333C52 !important;
+}
+
+/* Form inputs, textareas, selects in 75% Obsidian Dark */
+html.dark input:not([type="checkbox"]):not([type="radio"]),
+html.dark textarea,
+html.dark select,
+body.dark input:not([type="checkbox"]):not([type="radio"]),
+body.dark textarea,
+body.dark select,
+[data-theme="dark"] input:not([type="checkbox"]):not([type="radio"]),
+[data-theme="dark"] textarea,
+[data-theme="dark"] select {
+  background-color: #242A3D !important;
+  border-color: #374158 !important;
+  color: #FFFFFF !important;
+}
+
+html.dark input::placeholder,
+html.dark textarea::placeholder {
+  color: #94A3B8 !important;
+}
+
+html.dark input:focus,
+html.dark textarea:focus,
+html.dark select:focus {
+  border-color: #34D399 !important;
+}
+
+/* Universal Typography Adapters in 75% Obsidian Dark */
+html.dark h1:not([data-keep-white]):not([data-keep-white] *):not(.cv-document-sheet):not(.cv-document-sheet *):not([data-paper="white"]):not([data-paper="white"] *),
+html.dark h2:not([data-keep-white]):not([data-keep-white] *):not(.cv-document-sheet):not(.cv-document-sheet *):not([data-paper="white"]):not([data-paper="white"] *),
+html.dark h3:not([data-keep-white]):not([data-keep-white] *):not(.cv-document-sheet):not(.cv-document-sheet *):not([data-paper="white"]):not([data-paper="white"] *),
+html.dark h4:not([data-keep-white]):not([data-keep-white] *):not(.cv-document-sheet):not(.cv-document-sheet *):not([data-paper="white"]):not([data-paper="white"] *),
+html.dark h5:not([data-keep-white]):not([data-keep-white] *):not(.cv-document-sheet):not(.cv-document-sheet *):not([data-paper="white"]):not([data-paper="white"] *),
+html.dark h6:not([data-keep-white]):not([data-keep-white] *):not(.cv-document-sheet):not(.cv-document-sheet *):not([data-paper="white"]):not([data-paper="white"] *),
+body.dark h1:not([data-keep-white]):not([data-keep-white] *):not(.cv-document-sheet):not(.cv-document-sheet *):not([data-paper="white"]):not([data-paper="white"] *),
+body.dark h2:not([data-keep-white]):not([data-keep-white] *):not(.cv-document-sheet):not(.cv-document-sheet *):not([data-paper="white"]):not([data-paper="white"] *),
+body.dark h3:not([data-keep-white]):not([data-keep-white] *):not(.cv-document-sheet):not(.cv-document-sheet *):not([data-paper="white"]):not([data-paper="white"] *),
+body.dark h4:not([data-keep-white]):not([data-keep-white] *):not(.cv-document-sheet):not(.cv-document-sheet *):not([data-paper="white"]):not([data-paper="white"] *),
+.dark h1:not([data-keep-white]):not([data-keep-white] *):not(.cv-document-sheet):not(.cv-document-sheet *):not([data-paper="white"]):not([data-paper="white"] *),
+.dark h2:not([data-keep-white]):not([data-keep-white] *):not(.cv-document-sheet):not(.cv-document-sheet *):not([data-paper="white"]):not([data-paper="white"] *),
+.dark h3:not([data-keep-white]):not([data-keep-white] *):not(.cv-document-sheet):not(.cv-document-sheet *):not([data-paper="white"]):not([data-paper="white"] *),
+.dark h4:not([data-keep-white]):not([data-keep-white] *):not(.cv-document-sheet):not(.cv-document-sheet *):not([data-paper="white"]):not([data-paper="white"] *),
+[data-theme="dark"] h1:not([data-keep-white]):not([data-keep-white] *):not(.cv-document-sheet):not(.cv-document-sheet *):not([data-paper="white"]):not([data-paper="white"] *),
+[data-theme="dark"] h2:not([data-keep-white]):not([data-keep-white] *):not(.cv-document-sheet):not(.cv-document-sheet *):not([data-paper="white"]):not([data-paper="white"] *),
+[data-theme="dark"] h3:not([data-keep-white]):not([data-keep-white] *):not(.cv-document-sheet):not(.cv-document-sheet *):not([data-paper="white"]):not([data-paper="white"] *),
+[data-theme="dark"] h4:not([data-keep-white]):not([data-keep-white] *):not(.cv-document-sheet):not(.cv-document-sheet *):not([data-paper="white"]):not([data-paper="white"] *) {
+  color: #FFFFFF !important;
+}
+
+/* Primary High-Contrast Text (Titles, Headings, Primary Labels on dark surfaces) */
+html.dark .text-\[\#111111\]:not([data-keep-white]):not([data-keep-white] *):not(.cv-document-sheet):not(.cv-document-sheet *):not([class*="bg-[#F8D849]"]):not([class*="bg-[#FEF08A]"]):not([class*="bg-[#F5C518]"]):not([class*="bg-[#FACC15]"]):not([class*="bg-[#FEF9C3]"]):not([class*="dark:bg-white"]):not([class*="dark:bg-white"] *):not([class*="dark:text-"]):not([class*="dark:text-"] *),
+html.dark .text-\[\#1E2022\]:not([data-keep-white]):not([data-keep-white] *):not(.cv-document-sheet):not(.cv-document-sheet *),
+html.dark .text-\[\#252821\]:not([data-keep-white]):not([data-keep-white] *):not(.cv-document-sheet):not(.cv-document-sheet *),
+html.dark .text-\[\#333333\]:not([data-keep-white]):not([data-keep-white] *):not(.cv-document-sheet):not(.cv-document-sheet *),
+html.dark .text-\[\#222222\]:not([data-keep-white]):not([data-keep-white] *):not(.cv-document-sheet):not(.cv-document-sheet *),
+html.dark .text-\[\#4B4E46\]:not([data-keep-white]):not([data-keep-white] *):not(.cv-document-sheet):not(.cv-document-sheet *),
+html.dark .text-\[\#2B2B2B\]:not([data-keep-white]):not([data-keep-white] *):not(.cv-document-sheet):not(.cv-document-sheet *),
+html.dark .text-black:not([data-keep-white]):not([data-keep-white] *):not(.cv-document-sheet):not(.cv-document-sheet *):not([class*="bg-[#F8D849]"]):not([class*="bg-[#FEF08A]"]):not([class*="bg-[#F5C518]"]):not([class*="dark:bg-white"]):not([class*="dark:bg-white"] *):not([class*="dark:text-"]):not([class*="dark:text-"] *),
+html.dark [class*="text-[#111111]"]:not([data-keep-white]):not([data-keep-white] *):not(.cv-document-sheet):not(.cv-document-sheet *):not([class*="bg-[#F8D849]"]):not([class*="bg-[#FEF08A]"]):not([class*="bg-[#F5C518]"]):not([class*="bg-[#FACC15]"]):not([class*="bg-[#FEF9C3]"]):not([class*="dark:bg-white"]):not([class*="dark:bg-white"] *):not([class*="dark:text-"]):not([class*="dark:text-"] *),
+html.dark [class*="text-[#1E2022]"]:not([data-keep-white]):not([data-keep-white] *):not(.cv-document-sheet):not(.cv-document-sheet *),
+html.dark [class*="text-[#252821]"]:not([data-keep-white]):not([data-keep-white] *):not(.cv-document-sheet):not(.cv-document-sheet *),
+html.dark [class*="text-[#333333]"]:not([data-keep-white]):not([data-keep-white] *):not(.cv-document-sheet):not(.cv-document-sheet *),
+html.dark [class*="text-[#222222]"]:not([data-keep-white]):not([data-keep-white] *):not(.cv-document-sheet):not(.cv-document-sheet *),
+html.dark [class*="text-[#4B4E46]"]:not([data-keep-white]):not([data-keep-white] *):not(.cv-document-sheet):not(.cv-document-sheet *),
+html.dark [class*="text-[#2B2B2B]"]:not([data-keep-white]):not([data-keep-white] *):not(.cv-document-sheet):not(.cv-document-sheet *),
+html.dark [class*="text-black"]:not([class*="text-black/"]):not([data-keep-white]):not([data-keep-white] *):not(.cv-document-sheet):not(.cv-document-sheet *):not([class*="bg-[#F8D849]"]):not([class*="bg-[#FEF08A]"]):not([class*="bg-[#F5C518]"]):not([class*="dark:bg-white"]):not([class*="dark:bg-white"] *):not([class*="dark:text-"]):not([class*="dark:text-"] *),
+body.dark .text-\[\#111111\]:not([data-keep-white]):not([data-keep-white] *):not(.cv-document-sheet):not(.cv-document-sheet *):not([class*="bg-[#F8D849]"]):not([class*="bg-[#FEF08A]"]):not([class*="bg-[#F5C518]"]):not([class*="bg-[#FACC15]"]):not([class*="bg-[#FEF9C3]"]):not([class*="dark:bg-white"]):not([class*="dark:bg-white"] *):not([class*="dark:text-"]):not([class*="dark:text-"] *),
+body.dark .text-\[\#1E2022\]:not([data-keep-white]):not([data-keep-white] *):not(.cv-document-sheet):not(.cv-document-sheet *),
+body.dark .text-\[\#252821\]:not([data-keep-white]):not([data-keep-white] *):not(.cv-document-sheet):not(.cv-document-sheet *),
+body.dark .text-black:not([data-keep-white]):not([data-keep-white] *):not(.cv-document-sheet):not(.cv-document-sheet *):not([class*="bg-[#F8D849]"]):not([class*="bg-[#FEF08A]"]):not([class*="dark:bg-white"]):not([class*="dark:bg-white"] *):not([class*="dark:text-"]):not([class*="dark:text-"] *),
+.dark .text-\[\#111111\]:not([data-keep-white]):not([data-keep-white] *):not(.cv-document-sheet):not(.cv-document-sheet *):not([class*="bg-[#F8D849]"]):not([class*="bg-[#FEF08A]"]):not([class*="bg-[#F5C518]"]):not([class*="bg-[#FACC15]"]):not([class*="bg-[#FEF9C3]"]):not([class*="dark:bg-white"]):not([class*="dark:bg-white"] *):not([class*="dark:text-"]):not([class*="dark:text-"] *),
+.dark .text-\[\#1E2022\]:not([data-keep-white]):not([data-keep-white] *):not(.cv-document-sheet):not(.cv-document-sheet *),
+.dark .text-\[\#252821\]:not([data-keep-white]):not([data-keep-white] *):not(.cv-document-sheet):not(.cv-document-sheet *),
+.dark .text-black:not([data-keep-white]):not([data-keep-white] *):not(.cv-document-sheet):not(.cv-document-sheet *):not([class*="bg-[#F8D849]"]):not([class*="bg-[#FEF08A]"]):not([class*="dark:bg-white"]):not([class*="dark:bg-white"] *):not([class*="dark:text-"]):not([class*="dark:text-"] *),
+[data-theme="dark"] .text-\[\#111111\]:not([data-keep-white]):not([data-keep-white] *):not(.cv-document-sheet):not(.cv-document-sheet *):not([class*="bg-[#F8D849]"]):not([class*="bg-[#FEF08A]"]):not([class*="bg-[#F5C518]"]):not([class*="bg-[#FACC15]"]):not([class*="bg-[#FEF9C3]"]):not([class*="dark:bg-white"]):not([class*="dark:bg-white"] *):not([class*="dark:text-"]):not([class*="dark:text-"] *),
+[data-theme="dark"] .text-\[\#1E2022\]:not([data-keep-white]):not([data-keep-white] *):not(.cv-document-sheet):not(.cv-document-sheet *),
+[data-theme="dark"] .text-\[\#252821\]:not([data-keep-white]):not([data-keep-white] *):not(.cv-document-sheet):not(.cv-document-sheet *),
+[data-theme="dark"] .text-black:not([data-keep-white]):not([data-keep-white] *):not(.cv-document-sheet):not(.cv-document-sheet *):not([class*="bg-[#F8D849]"]):not([class*="bg-[#FEF08A]"]):not([class*="dark:bg-white"]):not([class*="dark:bg-white"] *):not([class*="dark:text-"]):not([class*="dark:text-"] *),
+[data-theme="dark"] [class*="text-[#111111]"]:not([data-keep-white]):not([data-keep-white] *):not(.cv-document-sheet):not(.cv-document-sheet *):not([class*="bg-[#F8D849]"]):not([class*="bg-[#FEF08A]"]):not([class*="bg-[#F5C518]"]):not([class*="bg-[#FACC15]"]):not([class*="bg-[#FEF9C3]"]):not([class*="dark:bg-white"]):not([class*="dark:bg-white"] *):not([class*="dark:text-"]):not([class*="dark:text-"] *),
+[data-theme="dark"] [class*="text-[#1E2022]"]:not([data-keep-white]):not([data-keep-white] *):not(.cv-document-sheet):not(.cv-document-sheet *),
+[data-theme="dark"] [class*="text-[#252821]"]:not([data-keep-white]):not([data-keep-white] *):not(.cv-document-sheet):not(.cv-document-sheet *),
+[data-theme="dark"] [class*="text-[#333333]"]:not([data-keep-white]):not([data-keep-white] *):not(.cv-document-sheet):not(.cv-document-sheet *),
+[data-theme="dark"] [class*="text-[#222222]"]:not([data-keep-white]):not([data-keep-white] *):not(.cv-document-sheet):not(.cv-document-sheet *),
+[data-theme="dark"] [class*="text-[#4B4E46]"]:not([data-keep-white]):not([data-keep-white] *):not(.cv-document-sheet):not(.cv-document-sheet *),
+[data-theme="dark"] [class*="text-[#2B2B2B]"]:not([data-keep-white]):not([data-keep-white] *):not(.cv-document-sheet):not(.cv-document-sheet *),
+[data-theme="dark"] [class*="text-black"]:not([class*="text-black/"]):not([data-keep-white]):not([data-keep-white] *):not(.cv-document-sheet):not(.cv-document-sheet *):not([class*="bg-[#F8D849]"]):not([class*="bg-[#FEF08A]"]):not([class*="dark:bg-white"]):not([class*="dark:bg-white"] *):not([class*="dark:text-"]):not([class*="dark:text-"] *) {
+  color: #FFFFFF !important;
+}
+
+/* Explicit Yellow & Amber Elements Protection - NEVER white text when resting on yellow background */
+html.dark [class~="bg-[#F8D849]"]:not([class*="dark:bg-"]),
+html.dark [class~="bg-[#F8D849]"]:not([class*="dark:bg-"]) *,
+html.dark [class~="bg-[#FEF08A]"]:not([class*="dark:bg-"]),
+html.dark [class~="bg-[#FEF08A]"]:not([class*="dark:bg-"]) *,
+html.dark [class~="bg-[#F5C518]"]:not([class*="dark:bg-"]),
+html.dark [class~="bg-[#F5C518]"]:not([class*="dark:bg-"]) *,
+html.dark [class~="bg-[#FACC15]"]:not([class*="dark:bg-"]),
+html.dark [class~="bg-[#FACC15]"]:not([class*="dark:bg-"]) *,
+html.dark [class~="bg-[#FEF9C3]"]:not([class*="dark:bg-"]),
+html.dark [class~="bg-[#FEF9C3]"]:not([class*="dark:bg-"]) *,
+html.dark button[class~="bg-[#F8D849]"]:not([class*="dark:bg-"]),
+html.dark button[class~="bg-[#F8D849]"]:not([class*="dark:bg-"]) * {
+  color: #111111 !important;
+}
+
+/* Explicit White Surfaces & Dark Text Protection in Dark Mode - ALWAYS dark text */
+html.dark [class~="dark:bg-white"]:not([class*="dark:bg-white/"]),
+html.dark [class~="dark:bg-white"]:not([class*="dark:bg-white/"]) *,
+html.dark [class*="dark:text-[#111111]"],
+html.dark [class*="dark:text-[#111111]"] *,
+html.dark [class*="dark:text-black"],
+html.dark [class*="dark:text-black"] *,
+html.dark [data-theme-text="dark"],
+html.dark [data-theme-text="dark"] *,
+[data-theme="dark"] [class~="dark:bg-white"]:not([class*="dark:bg-white/"]),
+[data-theme="dark"] [class~="dark:bg-white"]:not([class*="dark:bg-white/"]) *,
+[data-theme="dark"] [class*="dark:text-[#111111]"],
+[data-theme="dark"] [class*="dark:text-[#111111]"] *,
+[data-theme="dark"] [class*="dark:text-black"],
+[data-theme="dark"] [class*="dark:text-black"] * {
+  color: #111111 !important;
+}
+
+/* Hover on Yellow Buttons & Pills */
+html.dark [class*="hover:bg-[#F8D849]"]:hover,
+html.dark [class*="hover:bg-[#F8D849]"]:hover *,
+html.dark [class*="dark:hover:bg-[#F8D849]"]:hover,
+html.dark [class*="dark:hover:bg-[#F8D849]"]:hover * {
+  color: #111111 !important;
+}
+
+/* Character Status Badge - High Contrast Guaranteed in 75% Obsidian Dark Mode */
+html.dark [aria-label*="Current status"] span,
+body.dark [aria-label*="Current status"] span,
+.dark [aria-label*="Current status"] span,
+html.dark [aria-label*="Current status"] span span,
+body.dark [aria-label*="Current status"] span span,
+.dark [aria-label*="Current status"] span span {
+  color: #FFFFFF !important;
+}
+
+html.dark [aria-label*="Current status"]:hover span,
+body.dark [aria-label*="Current status"]:hover span,
+.dark [aria-label*="Current status"]:hover span,
+html.dark [aria-label*="Current status"]:hover span span,
+body.dark [aria-label*="Current status"]:hover span span,
+.dark [aria-label*="Current status"]:hover span span {
+  color: #111111 !important;
+}
+
+/* Secondary Muted Body Text */
+html.dark .text-\[\#55564E\]:not([data-keep-white]):not([data-keep-white] *):not(.cv-document-sheet):not(.cv-document-sheet *),
+html.dark .text-\[\#5D5E57\]:not([data-keep-white]):not([data-keep-white] *):not(.cv-document-sheet):not(.cv-document-sheet *),
+html.dark [class*="text-[#55564E]"]:not([data-keep-white]):not([data-keep-white] *):not(.cv-document-sheet):not(.cv-document-sheet *),
+html.dark [class*="text-[#5D5E57]"]:not([data-keep-white]):not([data-keep-white] *):not(.cv-document-sheet):not(.cv-document-sheet *),
+body.dark .text-\[\#55564E\]:not([data-keep-white]):not([data-keep-white] *):not(.cv-document-sheet):not(.cv-document-sheet *),
+.dark .text-\[\#55564E\]:not([data-keep-white]):not([data-keep-white] *):not(.cv-document-sheet):not(.cv-document-sheet *),
+[data-theme="dark"] .text-\[\#55564E\]:not([data-keep-white]):not([data-keep-white] *):not(.cv-document-sheet):not(.cv-document-sheet *),
+[data-theme="dark"] [class*="text-[#55564E]"]:not([data-keep-white]):not([data-keep-white] *):not(.cv-document-sheet):not(.cv-document-sheet *),
+[data-theme="dark"] [class*="text-[#5D5E57]"]:not([data-keep-white]):not([data-keep-white] *):not(.cv-document-sheet):not(.cv-document-sheet *) {
+  color: #CBD5E1 !important;
+}
+
+/* Tertiary & Metadata Labels */
+html.dark .text-\[\#77786F\]:not([data-keep-white]):not([data-keep-white] *):not(.cv-document-sheet):not(.cv-document-sheet *),
+html.dark .text-\[\#B4B0A4\]:not([data-keep-white]):not([data-keep-white] *):not(.cv-document-sheet):not(.cv-document-sheet *),
+html.dark .text-\[\#9CA3AF\]:not([data-keep-white]):not([data-keep-white] *):not(.cv-document-sheet):not(.cv-document-sheet *),
+html.dark [class*="text-[#77786F]"]:not([data-keep-white]):not([data-keep-white] *):not(.cv-document-sheet):not(.cv-document-sheet *),
+html.dark [class*="text-[#B4B0A4]"]:not([data-keep-white]):not([data-keep-white] *):not(.cv-document-sheet):not(.cv-document-sheet *),
+body.dark .text-\[\#77786F\]:not([data-keep-white]):not([data-keep-white] *):not(.cv-document-sheet):not(.cv-document-sheet *),
+.dark .text-\[\#77786F\]:not([data-keep-white]):not([data-keep-white] *):not(.cv-document-sheet):not(.cv-document-sheet *),
+[data-theme="dark"] .text-\[\#77786F\]:not([data-keep-white]):not([data-keep-white] *):not(.cv-document-sheet):not(.cv-document-sheet *),
+[data-theme="dark"] [class*="text-[#77786F]"]:not([data-keep-white]):not([data-keep-white] *):not(.cv-document-sheet):not(.cv-document-sheet *),
+[data-theme="dark"] [class*="text-[#B4B0A4]"]:not([data-keep-white]):not([data-keep-white] *):not(.cv-document-sheet):not(.cv-document-sheet *) {
+  color: #94A3B8 !important;
+}
+
+/* Brand Accent Colors Adjusted for Obsidian Dark Readability */
+html.dark .text-\[\#065F46\],
+html.dark [class*="text-[#065F46]"],
+[data-theme="dark"] .text-\[\#065F46\],
+[data-theme="dark"] [class*="text-[#065F46]"] {
+  color: #34D399 !important;
+}
+
+html.dark .text-\[\#92400E\],
+html.dark .text-\[\#854D0E\],
+html.dark .text-\[\#B45309\],
+html.dark [class*="text-[#92400E]"],
+html.dark [class*="text-[#854D0E]"],
+html.dark [class*="text-[#B45309]"],
+[data-theme="dark"] .text-\[\#92400E\],
+[data-theme="dark"] .text-\[\#854D0E\],
+[data-theme="dark"] .text-\[\#B45309\],
+[data-theme="dark"] [class*="text-[#92400E]"],
+[data-theme="dark"] [class*="text-[#854D0E]"],
+[data-theme="dark"] [class*="text-[#B45309]"] {
+  color: #FBBF24 !important;
+}
+
+html.dark .text-\[\#173B30\],
+html.dark [class*="text-[#173B30]"],
+[data-theme="dark"] .text-\[\#173B30\],
+[data-theme="dark"] [class*="text-[#173B30]"] {
+  color: #6EE7B7 !important;
+}
+
+html.dark .text-\[\#1845E8\],
+html.dark .text-\[\#0369A1\],
+html.dark [class*="text-[#1845E8]"],
+html.dark [class*="text-[#0369A1]"],
+[data-theme="dark"] .text-\[\#1845E8\],
+[data-theme="dark"] .text-\[\#0369A1\],
+[data-theme="dark"] [class*="text-[#1845E8]"],
+[data-theme="dark"] [class*="text-[#0369A1]"] {
+  color: #60A5FA !important;
+}
+
+html.dark .text-\[\#9D174D\],
+html.dark .text-\[\#BE185D\],
+html.dark [class*="text-[#9D174D]"],
+html.dark [class*="text-[#BE185D]"],
+[data-theme="dark"] .text-\[\#9D174D\],
+[data-theme="dark"] .text-\[\#BE185D\],
+[data-theme="dark"] [class*="text-[#9D174D]"],
+[data-theme="dark"] [class*="text-[#BE185D]"] {
+  color: #F472B6 !important;
+}
+
+/* Borders & Dividers in 75% Obsidian Dark */
+html.dark .border-black:not([data-keep-white]):not([data-keep-white] *):not(.cv-document-sheet):not(.cv-document-sheet *),
+html.dark .border-\[\#111111\]:not([data-keep-white]):not([data-keep-white] *):not(.cv-document-sheet):not(.cv-document-sheet *),
+html.dark .border-\[\#D5D8DC\]:not([data-keep-white]):not([data-keep-white] *):not(.cv-document-sheet):not(.cv-document-sheet *),
+html.dark .border-\[\#E2DDD2\]:not([data-keep-white]):not([data-keep-white] *):not(.cv-document-sheet):not(.cv-document-sheet *),
+html.dark .border-\[\#D8D4C8\]:not([data-keep-white]):not([data-keep-white] *):not(.cv-document-sheet):not(.cv-document-sheet *),
+html.dark .border-\[\#E5E7EB\]:not([data-keep-white]):not([data-keep-white] *):not(.cv-document-sheet):not(.cv-document-sheet *),
+html.dark .border-\[\#D4CFC3\]:not([data-keep-white]):not([data-keep-white] *):not(.cv-document-sheet):not(.cv-document-sheet *),
+html.dark [class*="border-black"]:not([data-keep-white]):not([data-keep-white] *):not(.cv-document-sheet):not(.cv-document-sheet *):not([class*="border-black/"]),
+html.dark [class*="border-[#111111]"]:not([data-keep-white]):not([data-keep-white] *):not(.cv-document-sheet):not(.cv-document-sheet *),
+html.dark [class*="border-[#D5D8DC]"]:not([data-keep-white]):not([data-keep-white] *):not(.cv-document-sheet):not(.cv-document-sheet *),
+html.dark [class*="border-[#E2DDD2]"]:not([data-keep-white]):not([data-keep-white] *):not(.cv-document-sheet):not(.cv-document-sheet *),
+html.dark [class*="border-[#D8D4C8]"]:not([data-keep-white]):not([data-keep-white] *):not(.cv-document-sheet):not(.cv-document-sheet *),
+html.dark [class*="border-[#E5E7EB]"]:not([data-keep-white]):not([data-keep-white] *):not(.cv-document-sheet):not(.cv-document-sheet *),
+html.dark [class*="border-[#D4CFC3]"]:not([data-keep-white]):not([data-keep-white] *):not(.cv-document-sheet):not(.cv-document-sheet *),
+body.dark .border-black:not([data-keep-white]):not([data-keep-white] *):not(.cv-document-sheet):not(.cv-document-sheet *),
+body.dark .border-\[\#111111\]:not([data-keep-white]):not([data-keep-white] *):not(.cv-document-sheet):not(.cv-document-sheet *),
+body.dark .border-\[\#D5D8DC\]:not([data-keep-white]):not([data-keep-white] *):not(.cv-document-sheet):not(.cv-document-sheet *),
+.dark .border-black:not([data-keep-white]):not([data-keep-white] *):not(.cv-document-sheet):not(.cv-document-sheet *),
+.dark .border-\[\#111111\]:not([data-keep-white]):not([data-keep-white] *):not(.cv-document-sheet):not(.cv-document-sheet *),
+.dark .border-\[\#D5D8DC\]:not([data-keep-white]):not([data-keep-white] *):not(.cv-document-sheet):not(.cv-document-sheet *),
+[data-theme="dark"] .border-black:not([data-keep-white]):not([data-keep-white] *):not(.cv-document-sheet):not(.cv-document-sheet *),
+[data-theme="dark"] .border-\[\#111111\]:not([data-keep-white]):not([data-keep-white] *):not(.cv-document-sheet):not(.cv-document-sheet *),
+[data-theme="dark"] .border-\[\#D5D8DC\]:not([data-keep-white]):not([data-keep-white] *):not(.cv-document-sheet):not(.cv-document-sheet *),
+[data-theme="dark"] .border-\[\#E2DDD2\]:not([data-keep-white]):not([data-keep-white] *):not(.cv-document-sheet):not(.cv-document-sheet *),
+[data-theme="dark"] .border-\[\#D8D4C8\]:not([data-keep-white]):not([data-keep-white] *):not(.cv-document-sheet):not(.cv-document-sheet *),
+[data-theme="dark"] .border-\[\#E5E7EB\]:not([data-keep-white]):not([data-keep-white] *):not(.cv-document-sheet):not(.cv-document-sheet *),
+[data-theme="dark"] [class*="border-black"]:not([data-keep-white]):not([data-keep-white] *):not(.cv-document-sheet):not(.cv-document-sheet *):not([class*="border-black/"]),
+[data-theme="dark"] [class*="border-[#111111]"]:not([data-keep-white]):not([data-keep-white] *):not(.cv-document-sheet):not(.cv-document-sheet *),
+[data-theme="dark"] [class*="border-[#D5D8DC]"]:not([data-keep-white]):not([data-keep-white] *):not(.cv-document-sheet):not(.cv-document-sheet *),
+[data-theme="dark"] [class*="border-[#E2DDD2]"]:not([data-keep-white]):not([data-keep-white] *):not(.cv-document-sheet):not(.cv-document-sheet *),
+[data-theme="dark"] [class*="border-[#D8D4C8]"]:not([data-keep-white]):not([data-keep-white] *):not(.cv-document-sheet):not(.cv-document-sheet *),
+[data-theme="dark"] [class*="border-[#E5E7EB]"]:not([data-keep-white]):not([data-keep-white] *):not(.cv-document-sheet):not(.cv-document-sheet *) {
+  border-color: #333C52 !important;
+}
+
+html.dark [class*="border-black/10"],
+html.dark [class*="border-black/15"],
+html.dark [class*="border-black/20"],
+html.dark [class*="border-black/30"] {
+  border-color: rgba(255, 255, 255, 0.12) !important;
+}
+
+html.dark [class*="divide-[#E2DDD2]"],
+html.dark [class*="divide-[#E5E7EB]"],
+[data-theme="dark"] [class*="divide-[#E2DDD2]"],
+[data-theme="dark"] [class*="divide-[#E5E7EB]"] {
+  border-color: #333C52 !important;
+}
+
+html.dark footer,
+body.dark footer,
+.dark footer,
+[data-theme="dark"] footer {
+  border-color: #333C52 !important;
+  color: #94A3B8 !important;
+}
+
+/* Neobrutalist sticker shadows in 75% obsidian dark mode */
+html.dark .shadow-sticker,
+body.dark .shadow-sticker,
+.dark .shadow-sticker,
+[data-theme="dark"] .shadow-sticker {
+  box-shadow: 3px 3px 0px rgba(0, 0, 0, 0.8) !important;
+}
+
+html.dark .shadow-sticker-sm,
+body.dark .shadow-sticker-sm,
+.dark .shadow-sticker-sm,
+[data-theme="dark"] .shadow-sticker-sm {
+  box-shadow: 2px 2px 0px rgba(0, 0, 0, 0.8) !important;
+}
+
+/* ==============================================================
+   AUTHENTIC DOCUMENT PREVIEW PROTECTION (CV PAPER)
+   If paper color is white, text color MUST BE BLACK (#000000 / #111111)
+   ============================================================== */
+html.dark [data-keep-white],
+html.dark .cv-document-sheet,
+html.dark [data-paper="white"],
+[data-theme="dark"] [data-keep-white],
+[data-theme="dark"] .cv-document-sheet,
+[data-theme="dark"] [data-paper="white"] {
+  background-color: #FFFFFF !important;
+  background: #FFFFFF !important;
+  color: #111111 !important;
+  border-color: #E2DDD2 !important;
+}
+
+/* Headings on white paper must be crisp solid black */
+html.dark [data-keep-white] h1,
+html.dark [data-keep-white] h2,
+html.dark [data-keep-white] h3,
+html.dark [data-keep-white] h4,
+html.dark [data-keep-white] h5,
+html.dark [data-keep-white] h6,
+html.dark .cv-document-sheet h1,
+html.dark .cv-document-sheet h2,
+html.dark .cv-document-sheet h3,
+html.dark .cv-document-sheet h4,
+html.dark .cv-document-sheet h5,
+html.dark .cv-document-sheet h6,
+[data-theme="dark"] [data-keep-white] h1,
+[data-theme="dark"] [data-keep-white] h2,
+[data-theme="dark"] [data-keep-white] h3,
+[data-theme="dark"] .cv-document-sheet h1,
+[data-theme="dark"] .cv-document-sheet h2,
+[data-theme="dark"] .cv-document-sheet h3 {
+  color: #000000 !important;
+}
+
+/* Paragraphs, list items, spans, strong, time on white paper must be black / dark charcoal */
+html.dark [data-keep-white] p,
+html.dark [data-keep-white] li,
+html.dark [data-keep-white] strong,
+html.dark [data-keep-white] em,
+html.dark [data-keep-white] time,
+html.dark .cv-document-sheet p,
+html.dark .cv-document-sheet li,
+html.dark .cv-document-sheet strong,
+html.dark .cv-document-sheet em,
+html.dark .cv-document-sheet time,
+[data-theme="dark"] [data-keep-white] p,
+[data-theme="dark"] [data-keep-white] li,
+[data-theme="dark"] .cv-document-sheet p,
+[data-theme="dark"] .cv-document-sheet li {
+  color: #111111 !important;
+}
+
+/* Spans inside white paper, excluding tech skill badge pills */
+html.dark [data-keep-white] span:not([class*="bg-[#EFF6FF]"]):not([class*="bg-[#3B82F6]"]):not([class*="bg-"]),
+html.dark .cv-document-sheet span:not([class*="bg-[#EFF6FF]"]):not([class*="bg-[#3B82F6]"]):not([class*="bg-"]),
+[data-theme="dark"] [data-keep-white] span:not([class*="bg-[#EFF6FF]"]):not([class*="bg-[#3B82F6]"]):not([class*="bg-"]),
+[data-theme="dark"] .cv-document-sheet span:not([class*="bg-[#EFF6FF]"]):not([class*="bg-[#3B82F6]"]):not([class*="bg-"]) {
+  color: #111111 !important;
+}
+
+/* Explicit text color utilities inside white CV paper */
+html.dark [data-keep-white] .text-black,
+html.dark [data-keep-white] [class*="text-black"],
+html.dark [data-keep-white] .text-\[\#111111\],
+html.dark [data-keep-white] [class*="text-[#111111]"],
+html.dark [data-keep-white] .text-\[\#222222\],
+html.dark [data-keep-white] [class*="text-[#222222]"],
+html.dark .cv-document-sheet .text-black,
+html.dark .cv-document-sheet [class*="text-black"],
+html.dark .cv-document-sheet .text-\[\#111111\],
+html.dark .cv-document-sheet [class*="text-[#111111]"],
+html.dark .cv-document-sheet .text-\[\#222222\],
+html.dark .cv-document-sheet [class*="text-[#222222]"] {
+  color: #000000 !important;
+}
+
+html.dark [data-keep-white] .text-\[\#2B2D28\],
+html.dark [data-keep-white] [class*="text-[#2B2D28]"],
+html.dark [data-keep-white] .text-\[\#4B4E46\],
+html.dark [data-keep-white] [class*="text-[#4B4E46]"],
+html.dark [data-keep-white] .text-\[\#55574F\],
+html.dark [data-keep-white] [class*="text-[#55574F]"],
+html.dark [data-keep-white] .text-\[\#5D5E57\],
+html.dark [data-keep-white] [class*="text-[#5D5E57]"],
+html.dark [data-keep-white] .text-\[\#66685F\],
+html.dark [data-keep-white] [class*="text-[#66685F]"],
+html.dark [data-keep-white] .text-\[\#77786F\],
+html.dark [data-keep-white] [class*="text-[#77786F]"],
+html.dark [data-keep-white] .text-\[\#333333\],
+html.dark [data-keep-white] [class*="text-[#333333]"],
+html.dark .cv-document-sheet .text-\[\#2B2D28\],
+html.dark .cv-document-sheet [class*="text-[#2B2D28]"],
+html.dark .cv-document-sheet .text-\[\#4B4E46\],
+html.dark .cv-document-sheet [class*="text-[#4B4E46]"],
+html.dark .cv-document-sheet .text-\[\#55574F\],
+html.dark .cv-document-sheet [class*="text-[#55574F]"],
+html.dark .cv-document-sheet .text-\[\#5D5E57\],
+html.dark .cv-document-sheet [class*="text-[#5D5E57]"],
+html.dark .cv-document-sheet .text-\[\#66685F\],
+html.dark .cv-document-sheet [class*="text-[#66685F]"],
+html.dark .cv-document-sheet .text-\[\#77786F\],
+html.dark .cv-document-sheet [class*="text-[#77786F]"],
+html.dark .cv-document-sheet .text-\[\#333333\],
+html.dark .cv-document-sheet [class*="text-[#333333]"] {
+  color: #111111 !important;
+}
+
+/* Skills tags inside tech-innovator on white paper */
+html.dark [data-keep-white] .text-\[\#1E3A5F\],
+html.dark [data-keep-white] [class*="text-[#1E3A5F]"],
+html.dark [data-keep-white] .text-\[\#0F2847\],
+html.dark [data-keep-white] [class*="text-[#0F2847]"],
+html.dark .cv-document-sheet .text-\[\#1E3A5F\],
+html.dark .cv-document-sheet [class*="text-[#1E3A5F]"],
+html.dark .cv-document-sheet .text-\[\#0F2847\],
+html.dark .cv-document-sheet [class*="text-[#0F2847]"] {
+  color: #0F2847 !important;
+}
+
+html.dark [data-keep-white] .border-\[\#E2DDD2\],
+html.dark [data-keep-white] [class*="border-[#E2DDD2]"],
+html.dark .cv-document-sheet .border-\[\#E2DDD2\],
+html.dark .cv-document-sheet [class*="border-[#E2DDD2]"] {
+  border-color: #E2DDD2 !important;
+}
+
+/* ==========================================================================
+   3D FLYING CLIPBOARD ATS AUDIT PAPER PRESERVATION IN DARK MODE
+   Ensures all ATS checklist text, candidate details, headers, and notes
+   remain ultra-crisp, dark ink, and 100% visible on the physical paper sheet.
+   ========================================================================== */
+html.dark [data-clipboard-paper],
+body.dark [data-clipboard-paper],
+.dark [data-clipboard-paper],
+[data-theme="dark"] [data-clipboard-paper] {
+  background-color: #FFFDF9 !important;
+}
+
+html.dark [data-clipboard-paper] p,
+html.dark [data-clipboard-paper] span:not([class*="bg-emerald-"]):not([class*="bg-red-"]):not([class*="text-white"]):not([class*="text-red-"]):not([class*="border-red-"]),
+body.dark [data-clipboard-paper] p,
+body.dark [data-clipboard-paper] span:not([class*="bg-emerald-"]):not([class*="bg-red-"]):not([class*="text-white"]):not([class*="text-red-"]):not([class*="border-red-"]),
+.dark [data-clipboard-paper] p,
+.dark [data-clipboard-paper] span:not([class*="bg-emerald-"]):not([class*="bg-red-"]):not([class*="text-white"]):not([class*="text-red-"]):not([class*="border-red-"]),
+[data-theme="dark"] [data-clipboard-paper] p,
+[data-theme="dark"] [data-clipboard-paper] span:not([class*="bg-emerald-"]):not([class*="bg-red-"]):not([class*="text-white"]):not([class*="text-red-"]):not([class*="border-red-"]) {
+  color: #111111 !important;
+}
+
+html.dark [data-clipboard-paper] .text-black,
+html.dark [data-clipboard-paper] [class*="text-black"],
+html.dark [data-clipboard-paper] [class*="text-[#111111]"],
+body.dark [data-clipboard-paper] .text-black,
+body.dark [data-clipboard-paper] [class*="text-black"],
+body.dark [data-clipboard-paper] [class*="text-[#111111]"],
+.dark [data-clipboard-paper] .text-black,
+.dark [data-clipboard-paper] [class*="text-black"],
+.dark [data-clipboard-paper] [class*="text-[#111111]"],
+[data-theme="dark"] [data-clipboard-paper] .text-black,
+[data-theme="dark"] [data-clipboard-paper] [class*="text-black"],
+[data-theme="dark"] [data-clipboard-paper] [class*="text-[#111111]"] {
+  color: #111111 !important;
+}
+
+html.dark [data-clipboard-paper] [class*="text-[#55574F]"],
+html.dark [data-clipboard-paper] [class*="text-[#77786F]"],
+body.dark [data-clipboard-paper] [class*="text-[#55574F]"],
+body.dark [data-clipboard-paper] [class*="text-[#77786F]"],
+.dark [data-clipboard-paper] [class*="text-[#55574F]"],
+.dark [data-clipboard-paper] [class*="text-[#77786F]"],
+[data-theme="dark"] [data-clipboard-paper] [class*="text-[#55574F]"],
+[data-theme="dark"] [data-clipboard-paper] [class*="text-[#77786F]"] {
+  color: #55574F !important;
+}
+
+html.dark [data-clipboard-paper] [class*="text-[#222222]"],
+html.dark [data-clipboard-paper] [class*="text-[#333333]"],
+body.dark [data-clipboard-paper] [class*="text-[#222222]"],
+body.dark [data-clipboard-paper] [class*="text-[#333333]"],
+.dark [data-clipboard-paper] [class*="text-[#222222]"],
+.dark [data-clipboard-paper] [class*="text-[#333333]"],
+[data-theme="dark"] [data-clipboard-paper] [class*="text-[#222222]"],
+[data-theme="dark"] [data-clipboard-paper] [class*="text-[#333333]"] {
+  color: #222222 !important;
+}
+
+html.dark [data-clipboard-paper] .border-black\/15,
+body.dark [data-clipboard-paper] .border-black\/15,
+.dark [data-clipboard-paper] .border-black\/15,
+[data-theme="dark"] [data-clipboard-paper] .border-black\/15 {
+  border-color: rgba(0, 0, 0, 0.15) !important;
+}
+
+html.dark [data-clipboard-paper] .border-\[\#E5E0D5\],
+body.dark [data-clipboard-paper] .border-\[\#E5E0D5\],
+.dark [data-clipboard-paper] .border-\[\#E5E0D5\],
+[data-theme="dark"] [data-clipboard-paper] .border-\[\#E5E0D5\] {
+  border-color: #E5E0D5 !important;
+}
+
+@media print {
+
+  /* Obfuscate and block unauthorized browser prints / print-screen captures */
+  body * {
+    visibility: hidden !important;
+  }
+
+  body::before {
+    visibility: visible !important;
+    content: "Screen capture and direct browser printing are restricted on Vitra to protect intellectual property and document privacy. Please use the official 'Download PDF' button inside your workspace to generate authentic documents.";
+    display: block;
+    position: fixed;
+    top: 35%;
+    left: 10%;
+    right: 10%;
+    font-family: Calibri, sans-serif;
+    font-size: 18px;
+    font-weight: bold;
+    text-align: center;
+    color: #173B30;
+    line-height: 1.6;
+    border: 2px dashed #C4A46B;
+    padding: 30px;
+    background: #FFFEFA;
+  }
+}

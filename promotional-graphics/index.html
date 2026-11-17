@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Vitra · Commercial Promotional Graphics Suite (3D Commercial Ads &amp; Tactile Relief)</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;700&family=JetBrains+Mono:wght@500;700&display=swap"
+    rel="stylesheet">
+  <link rel="stylesheet" href="preview-app.css">
+  <style>
+    /* Image Showcase Frame Overrides */
+    .image-preview-frame {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 24px;
+      overflow: hidden;
+      box-shadow: 0 25px 60px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.15);
+      background: #0D121A;
+    }
+
+    .image-preview-frame img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+      border-radius: 24px;
+      pointer-events: none;
+      user-select: none;
+    }
+
+    .image-badge-overlay {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      padding: 8px 18px;
+      border-radius: 9999px;
+      background: rgba(13, 18, 26, 0.75);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      color: #FFFFFF;
+      font-family: var(--font-mono);
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
+      z-index: 10;
+    }
+
+    .nav-thumb {
+      width: 38px;
+      height: 38px;
+      border-radius: 8px;
+      object-fit: cover;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      flex-shrink: 0;
+    }
+
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+  </style>
+</head>
+
+<body class="theme-emerald">
+  <!-- Top Superbar Header -->
+  <header class="studio-header">
+    <div class="header-left">
+      <div class="brand-badge">
+        <span class="brand-dot"></span>
+        <span class="brand-title">VITRA // COMMERCIAL CAMPAIGN SUITE</span>
+      </div>
+      <span class="aesthetic-formula">
+        <span class="formula-pill clay">Vitra Gold #FECB0D</span>
+        <span class="formula-pill glass">Forest Green #173B30</span>
+        <span class="formula-pill minimal">Packages from ₦6,000</span>
+      </span>
+    </div>
+
+    <!-- Theme & Action Toggles -->
+    <div class="header-right">
+      <div class="theme-selector">
+        <button class="theme-btn active" data-theme="theme-emerald" title="Official Vitra Forest & Gold">● Vitra Brand</button>
+        <button class="theme-btn" data-theme="theme-sunset" title="Warm Studio Ambiance">● Warm Studio</button>
+        <button class="theme-btn" data-theme="theme-obsidian" title="Obsidian Cyber">● Obsidian</button>
+        <button class="theme-btn" data-theme="theme-paper" title="Chalk & Paper">● Paper</button>
+      </div>
+      <a href="exports/" class="btn-downloads" title="Open Pre-rendered PNG Folder">
+        <span>📁 Open PNG Exports</span>
+      </a>
+    </div>
+  </header>
+
+  <!-- Main Workstation Layout -->
+  <div class="studio-workspace">
+    <!-- Sidebar Navigator -->
+    <aside class="studio-sidebar">
+      <div class="sidebar-section">
+        <span class="sidebar-heading">COMMERCIAL ASSETS (6)</span>
+        <nav class="nav-list">
+          <button class="nav-item active" data-target="promo-01">
+            <img src="exports/01-commercial-hero-banner.png" class="nav-thumb" alt="Thumb 01">
+            <div class="nav-info">
+              <span class="nav-title">Hero Master Banner</span>
+              <span class="nav-meta">1376 × 768 · 16:9 Landscape Banner</span>
+            </div>
+          </button>
+
+          <button class="nav-item" data-target="promo-02">
+            <img src="exports/02-commercial-story-vertical.png" class="nav-thumb" alt="Thumb 02">
+            <div class="nav-info">
+              <span class="nav-title">Story &amp; Reels Vertical</span>
+              <span class="nav-meta">768 × 1376 · 9:16 Mobile Ad</span>
+            </div>
+          </button>
+
+          <button class="nav-item" data-target="promo-03">
+            <img src="exports/03-commercial-square-post.png" class="nav-thumb" alt="Thumb 03">
+            <div class="nav-info">
+              <span class="nav-title">Commercial Square Post</span>
+              <span class="nav-meta">1024 × 1024 · 1:1 Feed Post</span>
+            </div>
+          </button>
+
+          <button class="nav-item" data-target="promo-04">
+            <img src="exports/04-pricing-showcase-commercial.png" class="nav-thumb" alt="Thumb 04">
+            <div class="nav-info">
+              <span class="nav-title">Pricing &amp; Deals Showcase</span>
+              <span class="nav-meta">1024 × 1024 · 1:1 3-Tier Pricing</span>
+            </div>
+          </button>
+
+          <button class="nav-item" data-target="promo-05">
+            <img src="exports/05-tactile-sculptural-masterpiece.png" class="nav-thumb" alt="Thumb 05">
+            <div class="nav-info">
+              <span class="nav-title">3D Tactile Sculptural Art</span>
+              <span class="nav-meta">1024 × 1024 · 1:1 Dimensional Relief</span>
+            </div>
+          </button>
+
+          <button class="nav-item" data-target="promo-06">
+            <img src="exports/06-campaign-showcase-board.png" class="nav-thumb" alt="Thumb 06">
+            <div class="nav-info">
+              <span class="nav-title">Campaign Presentation Board</span>
+              <span class="nav-meta">768 × 1376 · 9:16 Full Showcase</span>
+            </div>
+          </button>
+        </nav>
+      </div>
+
+      <!-- Quick Copy Caption Box -->
+      <div class="sidebar-section caption-section">
+        <div class="caption-header">
+          <span class="sidebar-heading">SUGGESTED SOCIAL COPY</span>
+          <button id="copy-caption-btn" class="btn-copy-sm">Copy</button>
+        </div>
+        <textarea id="caption-text" readonly class="caption-textarea"></textarea>
+      </div>
+    </aside>
+
+    <!-- Canvas Preview Stage -->
+    <main class="studio-stage">
+      <div class="stage-toolbar">
+        <div class="stage-info">
+          <span id="current-graphic-title" class="stage-title">01 · Hero Master Commercial Banner</span>
+          <span id="current-graphic-ratio" class="stage-ratio">16:9 Landscape (1376 × 768 px)</span>
+        </div>
+        <div class="stage-controls">
+          <button id="zoom-out" class="control-btn" title="Zoom Out">−</button>
+          <span id="zoom-level" class="zoom-label">65%</span>
+          <button id="zoom-in" class="control-btn" title="Zoom In">+</button>
+          <button id="zoom-fit" class="control-btn" title="Fit to Screen">Fit</button>
+          <button id="download-current-png" class="btn-download-primary">
+            <span>Download PNG</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Viewport Frame -->
+      <div class="canvas-viewport" id="viewport">
+        <div class="canvas-wrapper" id="canvas-wrapper">
+          <!-- GRAPHIC 01 -->
+          <article class="graphic-card active" id="promo-01" data-ratio="16:9" data-w="1376" data-h="768"
+            style="width: 1376px; height: 768px;">
+            <div class="image-preview-frame">
+              <span class="image-badge-overlay">16:9 · 1376 × 768 PNG</span>
+              <img src="exports/01-commercial-hero-banner.png" alt="01 · Commercial Hero Banner">
+            </div>
+          </article>
+
+          <!-- GRAPHIC 02 -->
+          <article class="graphic-card" id="promo-02" data-ratio="9:16" data-w="768" data-h="1376"
+            style="width: 768px; height: 1376px;">
+            <div class="image-preview-frame">
+              <span class="image-badge-overlay">9:16 · 768 × 1376 PNG</span>
+              <img src="exports/02-commercial-story-vertical.png" alt="02 · Commercial Story Vertical">
+            </div>
+          </article>
+
+          <!-- GRAPHIC 03 -->
+          <article class="graphic-card" id="promo-03" data-ratio="1:1" data-w="1024" data-h="1024"
+            style="width: 1024px; height: 1024px;">
+            <div class="image-preview-frame">
+              <span class="image-badge-overlay">1:1 · 1024 × 1024 PNG</span>
+              <img src="exports/03-commercial-square-post.png" alt="03 · Commercial Square Post">
+            </div>
+          </article>
+
+          <!-- GRAPHIC 04 -->
+          <article class="graphic-card" id="promo-04" data-ratio="1:1" data-w="1024" data-h="1024"
+            style="width: 1024px; height: 1024px;">
+            <div class="image-preview-frame">
+              <span class="image-badge-overlay">1:1 · 1024 × 1024 PNG</span>
+              <img src="exports/04-pricing-showcase-commercial.png" alt="04 · Pricing Showcase Commercial">
+            </div>
+          </article>
+
+          <!-- GRAPHIC 05 -->
+          <article class="graphic-card" id="promo-05" data-ratio="1:1" data-w="1024" data-h="1024"
+            style="width: 1024px; height: 1024px;">
+            <div class="image-preview-frame">
+              <span class="image-badge-overlay">1:1 · 1024 × 1024 PNG · 3D RELIEF</span>
+              <img src="exports/05-tactile-sculptural-masterpiece.png" alt="05 · Tactile Sculptural Masterpiece">
+            </div>
+          </article>
+
+          <!-- GRAPHIC 06 -->
+          <article class="graphic-card" id="promo-06" data-ratio="9:16" data-w="768" data-h="1376"
+            style="width: 768px; height: 1376px;">
+            <div class="image-preview-frame">
+              <span class="image-badge-overlay">9:16 · 768 × 1376 PNG · CAMPAIGN BOARD</span>
+              <img src="exports/06-campaign-showcase-board.png" alt="06 · Campaign Showcase Board">
+            </div>
+          </article>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script src="preview-app.js"></script>
+</body>
+
+</html>
