@@ -41,7 +41,6 @@ function RegisterFormInner() {
   const [resendCooldown, setResendCooldown] = useState(60);
   const [resendLoading, setResendLoading] = useState(false);
   const [resendSuccess, setResendSuccess] = useState<string | null>(null);
-  const [devCode, setDevCode] = useState<string | null>(null);
   const [deliveryInfo, setDeliveryInfo] = useState<{ liveSent?: boolean; provider?: string; error?: string } | null>(null);
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
 
@@ -111,7 +110,6 @@ function RegisterFormInner() {
         setMaskedEmail(data.maskedEmail || email);
         setOtpDigits(["", "", "", "", "", ""]);
         setOtpError(null);
-        setDevCode(data.devCode || null);
         setDeliveryInfo(data.emailDelivery || null);
         setResendCooldown(60);
         setResendSuccess(null);
@@ -254,7 +252,6 @@ function RegisterFormInner() {
 
       setResendCooldown(60);
       setResendSuccess("A fresh verification code has been sent to your email!");
-      if (data.devCode) setDevCode(data.devCode);
       if (data.emailDelivery) setDeliveryInfo(data.emailDelivery);
       setOtpDigits(["", "", "", "", "", ""]);
       inputRefs.current[0]?.focus();
@@ -340,35 +337,11 @@ function RegisterFormInner() {
             </div>
           )}
 
-          {/* Local Dev Helper Notice */}
-          {devCode && (
-            <div className="mt-4 rounded-xl border-2 border-black dark:border-[#3A4256] bg-[#FEF08A] dark:bg-[#252210] p-3 text-xs font-tech text-[#111111] dark:text-[#FEF08A] shadow-[2.5px_2.5px_0px_#111111] dark:shadow-[2.5px_2.5px_0px_#000]">
-              <div className="flex items-center justify-between">
-                <span className="font-extrabold uppercase tracking-wider text-[10px] bg-black text-[#FEF08A] px-2 py-0.5 rounded">
-                  🛠️ LOCAL DEV CODE
-                </span>
-                <button
-                  type="button"
-                  onClick={() => handlePastedCode(devCode)}
-                  className="font-bold text-xs text-[#1845E8] dark:text-amber-300 hover:underline cursor-pointer"
-                >
-                  Click to auto-fill code
-                </button>
-              </div>
-              <div className="mt-2 flex items-center justify-between bg-white dark:bg-[#151922] p-2 rounded-lg border border-black/20">
-                <span className="text-[11px] text-[#55564E] dark:text-[#94A3B8]">
-                  Your verification code:
-                </span>
-                <span className="font-mono text-lg font-black tracking-widest text-[#111111] dark:text-white">
-                  {devCode}
-                </span>
-              </div>
-              {!deliveryInfo?.liveSent && (
-                <p className="mt-2 text-[10px] text-[#55564E] dark:text-[#CBD5E1] leading-tight">
-                  Gmail requires a 16-character App Password to deliver live emails. To receive codes in your Gmail inbox, paste your Google App Password into <code className="font-mono bg-black/10 dark:bg-white/10 px-1 py-0.5 rounded font-bold">SMTP_PASS</code> in <code className="font-mono bg-black/10 dark:bg-white/10 px-1 py-0.5 rounded font-bold">.env.local</code>.
-                </p>
-              )}
-            </div>
+          {/* Delivery Note if Live Email Sent */}
+          {deliveryInfo?.liveSent && (
+            <p className="mt-2 text-center text-[11px] text-[#55564E] dark:text-[#94A3B8]">
+              Security code dispatched via email. Check your inbox and spam folder.
+            </p>
           )}
         </div>
 

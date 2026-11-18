@@ -92,7 +92,6 @@ export async function POST(request: Request) {
         email: user.email,
         maskedEmail: maskEmail(user.email),
         expiresAt,
-        devCode: isLocalDevModeAllowed() ? code : undefined,
         emailDelivery: {
           liveSent: isLiveEmailSent,
           provider: emailResult.provider,

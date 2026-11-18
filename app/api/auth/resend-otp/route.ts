@@ -57,7 +57,6 @@ export async function POST(request: Request) {
         ? "A new 6-digit security code has been sent to your email."
         : "A new security code has been generated.",
       expiresAt,
-      devCode: process.env.VITRA_ALLOW_LOCAL_DEV_MODE !== "false" ? code : undefined,
       emailDelivery: {
         liveSent: isLiveEmailSent,
         provider: emailResult.provider,
