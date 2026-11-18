@@ -32,7 +32,12 @@ create table if not exists public.cvs (
       'classic-professional',
       'modern-minimal',
       'corporate-executive',
-      'graduate-entry'
+      'graduate-entry',
+      'tech-innovator',
+      'nordic-clean',
+      'ivy-league',
+      'compact-hybrid',
+      'international-banking'
     )),
   structured_content jsonb not null default '{}'::jsonb,
   settings jsonb not null default '{"fontSize":"medium","spacing":"normal","hiddenSections":[],"sectionOrder":["summary","experience","education","skills","projects","certifications","additional"]}'::jsonb,
@@ -216,7 +221,7 @@ begin
   new.updated_at = now();
   return new;
 end;
-$$ language plpgsql;
+$$ language plpgsql set search_path = public;
 
 drop trigger if exists set_profiles_updated_at on public.profiles;
 create trigger set_profiles_updated_at
@@ -241,7 +246,9 @@ begin
   on conflict (id) do nothing;
   return new;
 end;
-$$ language plpgsql security definer;
+$$ language plpgsql security definer set search_path = public;
+
+revoke all on function public.handle_new_user() from public, anon, authenticated;
 
 drop trigger if exists on_auth_user_created on auth.users;
 create trigger on_auth_user_created
