@@ -55,10 +55,10 @@ export async function getAuthenticatedUser(): Promise<AuthenticatedUser | null> 
           emailVerified: Boolean(user.email_confirmed_at),
           role: assignedRole,
           provider: "supabase",
-          planId: (profile?.plan_id as "starter" | "pro" | "executive") || null,
-          maxCvs: Number(profile?.max_cvs || 0),
+          planId: (profile?.plan_id as "starter" | "pro" | "executive") || (isOwner ? "executive" : null),
+          maxCvs: isOwner ? 999 : Number(profile?.max_cvs || 0),
           generatedCvsCount: Number(profile?.generated_cvs_count || 0),
-          planPurchasedAt: profile?.plan_purchased_at || null,
+          planPurchasedAt: profile?.plan_purchased_at || (isOwner ? new Date().toISOString() : null),
           avatarUrl: (profile?.avatar_url as string | undefined) || (user.user_metadata?.avatar_url as string | undefined) || null,
         };
       }
@@ -86,10 +86,10 @@ export async function getAuthenticatedUser(): Promise<AuthenticatedUser | null> 
         emailVerified: user?.emailVerified ?? true,
         role: assignedRole,
         provider: "local-dev",
-        planId: user?.planId || null,
-        maxCvs: user?.maxCvs ?? 0,
+        planId: user?.planId || (isOwner ? "executive" : null),
+        maxCvs: isOwner ? 999 : (user?.maxCvs ?? 0),
         generatedCvsCount: localDevDb.getGeneratedCvsCount(sessionData.userId),
-        planPurchasedAt: user?.planPurchasedAt || null,
+        planPurchasedAt: user?.planPurchasedAt || (isOwner ? new Date().toISOString() : null),
         avatarUrl: user?.avatarUrl || null,
       };
     }

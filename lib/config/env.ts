@@ -43,7 +43,6 @@ export function resolveAiProvider(): "gemini" | "openai" | "none" {
 }
 
 export function isLocalDevModeAllowed(): boolean {
-  if (isSupabaseConfigured()) return false;
   if (process.env.VITRA_ALLOW_LOCAL_DEV_MODE === "false") return false;
   return true;
 }

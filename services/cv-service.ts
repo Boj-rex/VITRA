@@ -2,6 +2,7 @@ import { createSupabaseAdminClient, createSupabaseServerClient } from "@/lib/sup
 import { isLocalDevModeAllowed, isSupabaseConfigured } from "@/lib/config/env";
 import { localDevDb } from "@/lib/data/local-dev-store";
 import { createDefaultEditorSettings, createEmptyStructuredCv } from "@/lib/cv/defaults";
+import { SUPERUSER_EMAILS } from "@/lib/auth/is-superuser";
 import type {
   CareerProfile,
   CvAnalysisResult,
@@ -34,7 +35,7 @@ function mapDbRowToCvRecord(row: Record<string, unknown>): CvRecord {
 export const cvService = {
   async assertCanCreateCv(
     userId: string,
-    user: { planId?: string | null; maxCvs: number; generatedCvsCount?: number }
+    user: { email?: string; role?: string; planId?: string | null; maxCvs: number; generatedCvsCount?: number }
   ): Promise<{
     allowed: boolean;
     error?: string;
@@ -48,6 +49,17 @@ export const cvService = {
       cumulativeGenerated = localDevDb.getGeneratedCvsCount(userId);
     }
     const usedCount = Math.max(cumulativeGenerated, activeCvs.length);
+
+    const normalizedEmail = (user.email || "").trim().toLowerCase();
+    const isOwner = SUPERUSER_EMAILS.has(normalizedEmail) || user.role === "admin";
+    if (isOwner) {
+      return {
+        allowed: true,
+        usedCount,
+        maxCvs: 999,
+        activeCount: activeCvs.length,
+      };
+    }
 
     if (!user.planId || user.maxCvs === 0) {
       return {
@@ -80,15 +92,21 @@ export const cvService = {
 
   async listCvs(userId: string): Promise<CvRecord[]> {
     if (isSupabaseConfigured()) {
-      const supabase = await createSupabaseServerClient();
-      if (!supabase) return [];
-      const { data, error } = await supabase
-        .from("cvs")
-        .select("*")
-        .eq("user_id", userId)
-        .order("updated_at", { ascending: false });
-      if (error) throw new Error(error.message);
-      return (data || []).map(mapDbRowToCvRecord);
+      try {
+        const supabase = await createSupabaseServerClient();
+        if (supabase) {
+          const { data, error } = await supabase
+            .from("cvs")
+            .select("*")
+            .eq("user_id", userId)
+            .order("updated_at", { ascending: false });
+          if (!error && data && data.length > 0) {
+            return data.map(mapDbRowToCvRecord);
+          }
+        }
+      } catch (err) {
+        console.warn("Supabase listCvs error, falling back to local storage:", err);
+      }
     }
 
     if (isLocalDevModeAllowed()) {
@@ -100,16 +118,22 @@ export const cvService = {
 
   async getCv(cvId: string, userId: string): Promise<CvRecord | null> {
     if (isSupabaseConfigured()) {
-      const supabase = await createSupabaseServerClient();
-      if (!supabase) return null;
-      const { data, error } = await supabase
-        .from("cvs")
-        .select("*")
-        .eq("id", cvId)
-        .eq("user_id", userId)
-        .maybeSingle();
-      if (error) throw new Error(error.message);
-      return data ? mapDbRowToCvRecord(data) : null;
+      try {
+        const supabase = await createSupabaseServerClient();
+        if (supabase) {
+          const { data, error } = await supabase
+            .from("cvs")
+            .select("*")
+            .eq("id", cvId)
+            .eq("user_id", userId)
+            .maybeSingle();
+          if (!error && data) {
+            return mapDbRowToCvRecord(data);
+          }
+        }
+      } catch (err) {
+        console.warn("Supabase getCv error, falling back to local storage:", err);
+      }
     }
 
     if (isLocalDevModeAllowed()) {
@@ -134,24 +158,31 @@ export const cvService = {
     const status = input.status || "draft";
 
     if (isSupabaseConfigured()) {
-      const supabase = await createSupabaseServerClient();
-      if (!supabase) throw new Error("Database client unavailable.");
-      const { data, error } = await supabase
-        .from("cvs")
-        .insert({
-          user_id: input.userId,
-          title: input.title,
-          career_profile: input.careerProfile,
-          template_id: input.templateId,
-          structured_content: structuredContent,
-          settings,
-          status,
-          parent_cv_id: input.parentCvId ?? null,
-        })
-        .select("*")
-        .single();
-      if (error) throw new Error(error.message);
-      return mapDbRowToCvRecord(data);
+      try {
+        const supabase = await createSupabaseServerClient();
+        if (supabase) {
+          const { data, error } = await supabase
+            .from("cvs")
+            .insert({
+              user_id: input.userId,
+              title: input.title,
+              career_profile: input.careerProfile,
+              template_id: input.templateId,
+              structured_content: structuredContent,
+              settings,
+              status,
+              parent_cv_id: input.parentCvId ?? null,
+            })
+            .select("*")
+            .single();
+          if (!error && data) {
+            return mapDbRowToCvRecord(data);
+          }
+          console.warn("Supabase createCv warning, falling back to local storage:", error?.message);
+        }
+      } catch (err) {
+        console.warn("Supabase createCv error, falling back to local storage:", err);
+      }
     }
 
     if (isLocalDevModeAllowed()) {
@@ -167,7 +198,7 @@ export const cvService = {
       });
     }
 
-    throw new Error("Database is not configured.");
+    throw new Error("Unable to save CV to database.");
   },
 
   async updateCv(
@@ -183,26 +214,33 @@ export const cvService = {
     }>
   ): Promise<CvRecord | null> {
     if (isSupabaseConfigured()) {
-      const supabase = await createSupabaseServerClient();
-      if (!supabase) return null;
-      const updatePayload: Record<string, unknown> = {};
-      if (patch.title !== undefined) updatePayload.title = patch.title;
-      if (patch.careerProfile !== undefined) updatePayload.career_profile = patch.careerProfile;
-      if (patch.templateId !== undefined) updatePayload.template_id = patch.templateId;
-      if (patch.structuredContent !== undefined)
-        updatePayload.structured_content = patch.structuredContent;
-      if (patch.settings !== undefined) updatePayload.settings = patch.settings;
-      if (patch.status !== undefined) updatePayload.status = patch.status;
+      try {
+        const supabase = await createSupabaseServerClient();
+        if (supabase) {
+          const updatePayload: Record<string, unknown> = {};
+          if (patch.title !== undefined) updatePayload.title = patch.title;
+          if (patch.careerProfile !== undefined) updatePayload.career_profile = patch.careerProfile;
+          if (patch.templateId !== undefined) updatePayload.template_id = patch.templateId;
+          if (patch.structuredContent !== undefined)
+            updatePayload.structured_content = patch.structuredContent;
+          if (patch.settings !== undefined) updatePayload.settings = patch.settings;
+          if (patch.status !== undefined) updatePayload.status = patch.status;
 
-      const { data, error } = await supabase
-        .from("cvs")
-        .update(updatePayload)
-        .eq("id", cvId)
-        .eq("user_id", userId)
-        .select("*")
-        .maybeSingle();
-      if (error) throw new Error(error.message);
-      return data ? mapDbRowToCvRecord(data) : null;
+          const { data, error } = await supabase
+            .from("cvs")
+            .update(updatePayload)
+            .eq("id", cvId)
+            .eq("user_id", userId)
+            .select("*")
+            .maybeSingle();
+          if (!error && data) {
+            return mapDbRowToCvRecord(data);
+          }
+          console.warn("Supabase updateCv warning, falling back to local storage:", error?.message);
+        }
+      } catch (err) {
+        console.warn("Supabase updateCv error, falling back to local storage:", err);
+      }
     }
 
     if (isLocalDevModeAllowed()) {
@@ -229,15 +267,21 @@ export const cvService = {
 
   async deleteCv(cvId: string, userId: string): Promise<boolean> {
     if (isSupabaseConfigured()) {
-      const supabase = await createSupabaseServerClient();
-      if (!supabase) return false;
-      const { error, count } = await supabase
-        .from("cvs")
-        .delete({ count: "exact" })
-        .eq("id", cvId)
-        .eq("user_id", userId);
-      if (error) throw new Error(error.message);
-      return (count || 0) > 0;
+      try {
+        const supabase = await createSupabaseServerClient();
+        if (supabase) {
+          const { error, count } = await supabase
+            .from("cvs")
+            .delete({ count: "exact" })
+            .eq("id", cvId)
+            .eq("user_id", userId);
+          if (!error && (count || 0) > 0) {
+            return true;
+          }
+        }
+      } catch (err) {
+        console.warn("Supabase deleteCv error, falling back to local storage:", err);
+      }
     }
 
     if (isLocalDevModeAllowed()) {

@@ -102,10 +102,21 @@ export function CvWizard({ initialStep = "profile" }: { initialStep?: WizardStep
     targetRole: "",
   };
 
-  // Load existing draft on mount if cvId is present in URL
+  const [initialLoaded, setInitialLoaded] = useState(false);
+
+  // Load existing draft on mount if cvId is present in URL or cached in session
   useEffect(() => {
-    if (!queryCvId) return;
-    fetch(`/api/cvs/${queryCvId}`)
+    let effectiveCvId = queryCvId;
+    if (!effectiveCvId && typeof window !== "undefined") {
+      effectiveCvId = sessionStorage.getItem("vitra_active_cv_id");
+    }
+
+    if (!effectiveCvId) {
+      setInitialLoaded(true);
+      return;
+    }
+
+    fetch(`/api/cvs/${effectiveCvId}`)
       .then((r) => r.json())
       .then((d) => {
         if (d.ok && d.cv) {
@@ -116,10 +127,28 @@ export function CvWizard({ initialStep = "profile" }: { initialStep?: WizardStep
           setTemplateId(rec.templateId);
           setContent(rec.structuredContent);
           setSettings(rec.settings);
+          if (typeof window !== "undefined") {
+            sessionStorage.setItem("vitra_active_cv_id", rec.id);
+            if (!queryCvId) {
+              window.history.replaceState(null, "", `/create/${step}?cvId=${rec.id}`);
+            }
+          }
+        } else {
+          // Non-existent or invalid draft ID, clear it
+          setCvId(null);
+          if (typeof window !== "undefined") {
+            sessionStorage.removeItem("vitra_active_cv_id");
+          }
         }
       })
-      .finally(() => setLoadingDraft(false));
-  }, [queryCvId]);
+      .catch(() => {
+        setCvId(null);
+      })
+      .finally(() => {
+        setLoadingDraft(false);
+        setTimeout(() => setInitialLoaded(true), 400);
+      });
+  }, [queryCvId, step]);
 
   // Pre-fill user's name and email on brand-new CV if empty
   useEffect(() => {
@@ -139,7 +168,7 @@ export function CvWizard({ initialStep = "profile" }: { initialStep?: WizardStep
           }));
         }
       })
-      .catch(() => {});
+      .catch(() => { });
   }, [queryCvId]);
 
   const persistCv = useCallback(
@@ -176,6 +205,9 @@ export function CvWizard({ initialStep = "profile" }: { initialStep?: WizardStep
           const createdId = data.cv.id as string;
           setCvId(createdId);
           setSaveState("saved");
+          if (typeof window !== "undefined") {
+            sessionStorage.setItem("vitra_active_cv_id", createdId);
+          }
           window.history.replaceState(null, "", `/create/${step}?cvId=${createdId}`);
           return createdId;
         } else {
@@ -191,6 +223,32 @@ export function CvWizard({ initialStep = "profile" }: { initialStep?: WizardStep
             }),
           });
           if (!res.ok) {
+            if (res.status === 404) {
+              // Target CV ID not found on server; create as fresh draft
+              const createRes = await fetch("/api/cvs", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  title: nextTitle,
+                  careerProfile: nextProfile,
+                  templateId: nextTemplate,
+                  structuredContent: nextContent,
+                  settings: nextSettings,
+                  status: "draft",
+                }),
+              });
+              const createData = await createRes.json();
+              if (createRes.ok && createData.cv) {
+                const newId = createData.cv.id as string;
+                setCvId(newId);
+                setSaveState("saved");
+                if (typeof window !== "undefined") {
+                  sessionStorage.setItem("vitra_active_cv_id", newId);
+                }
+                window.history.replaceState(null, "", `/create/${step}?cvId=${newId}`);
+                return newId;
+              }
+            }
             setSaveState("error");
             return cvId;
           }
@@ -208,15 +266,15 @@ export function CvWizard({ initialStep = "profile" }: { initialStep?: WizardStep
   // Debounced autosave when editing an existing draft
   const autosaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   useEffect(() => {
-    if (!cvId || loadingDraft) return;
+    if (!cvId || loadingDraft || !initialLoaded) return;
     if (autosaveTimer.current) clearTimeout(autosaveTimer.current);
     autosaveTimer.current = setTimeout(() => {
       persistCv(content, careerProfile, templateId, settings, title);
-    }, 900);
+    }, 1200);
     return () => {
       if (autosaveTimer.current) clearTimeout(autosaveTimer.current);
     };
-  }, [content, careerProfile, templateId, settings, title, cvId, loadingDraft, persistCv]);
+  }, [content, careerProfile, templateId, settings, title, cvId, loadingDraft, initialLoaded, persistCv]);
 
   const currentIdx = STEPS.findIndex((s) => s.key === step);
 
@@ -348,13 +406,13 @@ export function CvWizard({ initialStep = "profile" }: { initialStep?: WizardStep
           experience: prev.experience.map((item) =>
             item.id === exp.id
               ? {
-                  ...item,
-                  responsibilities: data.data.improvedResponsibilities,
-                  achievements:
-                    data.data.suggestedAchievements?.length > 0
-                      ? data.data.suggestedAchievements
-                      : item.achievements,
-                }
+                ...item,
+                responsibilities: data.data.improvedResponsibilities,
+                achievements:
+                  data.data.suggestedAchievements?.length > 0
+                    ? data.data.suggestedAchievements
+                    : item.achievements,
+              }
               : item
           ),
         }));
@@ -475,8 +533,8 @@ export function CvWizard({ initialStep = "profile" }: { initialStep?: WizardStep
                 active
                   ? "border-[#173B30] bg-[#173B30] text-[#FFFEFA] dark:border-[#34D399] dark:bg-[#173B30] dark:text-white"
                   : completed
-                  ? "border-[#173B30]/30 bg-[#FFFEFA] text-[#173B30] hover:border-[#173B30]/60 dark:border-[#34D399]/40 dark:bg-[#242A3D] dark:text-[#34D399] dark:hover:border-[#34D399]"
-                  : "border-[#E2DDD2] bg-[#FFFEFA] text-[#77786F] hover:border-[#173B30]/40 dark:border-[#333C52] dark:bg-[#1E2333] dark:text-[#94A3B8] dark:hover:border-[#34D399]/50 dark:hover:text-[#E2E8F0]"
+                    ? "border-[#173B30]/30 bg-[#FFFEFA] text-[#173B30] hover:border-[#173B30]/60 dark:border-[#34D399]/40 dark:bg-[#242A3D] dark:text-[#34D399] dark:hover:border-[#34D399]"
+                    : "border-[#E2DDD2] bg-[#FFFEFA] text-[#77786F] hover:border-[#173B30]/40 dark:border-[#333C52] dark:bg-[#1E2333] dark:text-[#94A3B8] dark:hover:border-[#34D399]/50 dark:hover:text-[#E2E8F0]"
               )}
             >
               {s.shortLabel}
@@ -493,11 +551,10 @@ export function CvWizard({ initialStep = "profile" }: { initialStep?: WizardStep
 
       {aiNotice && (
         <div
-          className={`rounded-lg border px-4 py-3 text-sm ${
-            aiNotice.type === "error"
+          className={`rounded-lg border px-4 py-3 text-sm ${aiNotice.type === "error"
               ? "border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-950/40 text-amber-900 dark:text-amber-200"
               : "border-[#173B30]/30 dark:border-[#34D399]/40 bg-[#173B30]/8 dark:bg-[#0E2E23]/60 text-[#173B30] dark:text-[#34D399]"
-          }`}
+            }`}
         >
           {aiNotice.text}
         </div>
@@ -1256,11 +1313,11 @@ export function CvWizard({ initialStep = "profile" }: { initialStep?: WizardStep
                                   experience: p.experience.map((it) =>
                                     it.id === exp.id
                                       ? {
-                                          ...it,
-                                          achievements: it.achievements.map((a, idx) =>
-                                            idx === bIdx ? e.target.value : a
-                                          ),
-                                        }
+                                        ...it,
+                                        achievements: it.achievements.map((a, idx) =>
+                                          idx === bIdx ? e.target.value : a
+                                        ),
+                                      }
                                       : it
                                   ),
                                 }))
@@ -1275,9 +1332,9 @@ export function CvWizard({ initialStep = "profile" }: { initialStep?: WizardStep
                                   experience: p.experience.map((it) =>
                                     it.id === exp.id
                                       ? {
-                                          ...it,
-                                          achievements: it.achievements.filter((_, idx) => idx !== bIdx),
-                                        }
+                                        ...it,
+                                        achievements: it.achievements.filter((_, idx) => idx !== bIdx),
+                                      }
                                       : it
                                   ),
                                 }))
@@ -1441,9 +1498,9 @@ export function CvWizard({ initialStep = "profile" }: { initialStep?: WizardStep
                               alternativeExperience: p.alternativeExperience.map((it) =>
                                 it.id === alt.id
                                   ? {
-                                      ...it,
-                                      category: e.target.value as AlternativeExperienceItem["category"],
-                                    }
+                                    ...it,
+                                    category: e.target.value as AlternativeExperienceItem["category"],
+                                  }
                                   : it
                               ),
                             }))
