@@ -90,7 +90,7 @@ export function InteractiveFloatingCharacter({
     const preloaded: HTMLImageElement[] = new Array(totalFrames);
 
     const getFrameUrl = (idx: number) =>
-      `/characters/${character}/anim_${String(idx).padStart(3, "0")}.webp`;
+      `/characters/${character}/anim_${String(idx).padStart(3, "0")}.webp?v=1080p_final`;
 
     const loadFrame = (idx: number): Promise<HTMLImageElement> => {
       return new Promise((resolve) => {
@@ -138,12 +138,11 @@ export function InteractiveFloatingCharacter({
       Promise.all(bufferPromises).then(() => {
         if (isCancelled) return;
 
-        // Step 3: Progressively stream the remaining frames in small gentle batches
-        // Prevents network connection saturation so man and woman stream cooperatively
+        // Step 3: Rapidly stream the remaining frames in smooth, prioritized batches
         let batchStart = 0;
         const loadNextBatch = () => {
           if (isCancelled || batchStart >= totalFrames) return;
-          const batchEnd = Math.min(batchStart + 12, totalFrames);
+          const batchEnd = Math.min(batchStart + 16, totalFrames);
           for (let i = batchStart; i < batchEnd; i++) {
             if (!preloaded[i]) {
               loadFrame(i);
@@ -151,14 +150,7 @@ export function InteractiveFloatingCharacter({
           }
           batchStart = batchEnd;
           if (batchStart < totalFrames) {
-            if (typeof window !== "undefined" && "requestIdleCallback" in window) {
-              (window as unknown as { requestIdleCallback: (cb: () => void, opts: { timeout: number }) => void }).requestIdleCallback(
-                () => loadNextBatch(),
-                { timeout: 150 }
-              );
-            } else {
-              setTimeout(loadNextBatch, 50);
-            }
+            setTimeout(loadNextBatch, 30);
           }
         };
 
@@ -203,16 +195,23 @@ export function InteractiveFloatingCharacter({
             directionRef.current = 1;
             holdCountRef.current = HOLD_FRAMES;
           }
-          frameIndexRef.current = nextIdx;
-        }
 
-        const currentIdx = frameIndexRef.current;
-        const img = imagesRef.current[currentIdx];
-
-        if (img && img.complete && img.naturalWidth > 0) {
-          ctx.clearRect(0, 0, canvas.width, canvas.height);
-          ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-          setHasDrawnCanvas(true);
+          // Anti-glitch guard: Only advance if the target frame is fully loaded in memory
+          const targetImg = imagesRef.current[nextIdx];
+          if (targetImg && targetImg.complete && targetImg.naturalWidth > 0) {
+            frameIndexRef.current = nextIdx;
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.drawImage(targetImg, 0, 0, canvas.width, canvas.height);
+            setHasDrawnCanvas(true);
+          } else {
+            // Buffer wait: preserve current frame until next frame arrives to avoid teleporting
+            const currentImg = imagesRef.current[frameIndexRef.current];
+            if (currentImg && currentImg.complete && currentImg.naturalWidth > 0) {
+              ctx.clearRect(0, 0, canvas.width, canvas.height);
+              ctx.drawImage(currentImg, 0, 0, canvas.width, canvas.height);
+              setHasDrawnCanvas(true);
+            }
+          }
         }
       }
 
@@ -414,7 +413,7 @@ export function InteractiveFloatingCharacter({
           {/* Instant High-Priority Poster: Guarantees female & male characters appear instantly at the exact same moment on first load */}
           {!hasDrawnCanvas && (
             <img
-              src={`/characters/${character}/anim_${String(initialFrame).padStart(3, "0")}.webp`}
+              src={`/characters/${character}/anim_${String(initialFrame).padStart(3, "0")}.webp?v=1080p_final`}
               alt=""
               width={480}
               height={720}
