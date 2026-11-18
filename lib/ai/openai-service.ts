@@ -136,19 +136,42 @@ async function runStructuredAi<T>(
 
     if (status.activeAiProvider === "gemini") {
       const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
-      const response = await ai.models.generateContent({
-        model: status.geminiModel,
-        contents: userPrompt,
-        config: {
-          systemInstruction: ANTI_FABRICATION_SYSTEM_PROMPT,
-          temperature: 0.25,
-          responseMimeType: "application/json",
-          abortSignal: AbortSignal.timeout(25000),
-        },
-      });
-      rawContent = response.text || "";
-      promptTokens = response.usageMetadata?.promptTokenCount || 1;
-      completionTokens = response.usageMetadata?.candidatesTokenCount || 1;
+      const configuredModel = status.geminiModel || "gemini-3.1-flash-lite";
+      const candidateModels = Array.from(
+        new Set([configuredModel, "gemini-3.1-flash-lite", "gemini-3.5-flash-lite", "gemini-3.8-flash"])
+      );
+
+      let lastError: unknown = null;
+      for (const modelName of candidateModels) {
+        try {
+          const response = await ai.models.generateContent({
+            model: modelName,
+            contents: userPrompt,
+            config: {
+              systemInstruction: ANTI_FABRICATION_SYSTEM_PROMPT,
+              temperature: 0.25,
+              responseMimeType: "application/json",
+              abortSignal: AbortSignal.timeout(25000),
+            },
+          });
+          rawContent = response.text || "";
+          promptTokens = response.usageMetadata?.promptTokenCount || 1;
+          completionTokens = response.usageMetadata?.candidatesTokenCount || 1;
+          if (rawContent) {
+            break;
+          }
+        } catch (candidateErr) {
+          lastError = candidateErr;
+          console.warn(
+            `Gemini model ${modelName} encountered an error, falling back to next candidate:`,
+            candidateErr instanceof Error ? candidateErr.message : candidateErr
+          );
+        }
+      }
+
+      if (!rawContent && lastError) {
+        throw lastError;
+      }
     } else {
       const client = new OpenAI({
         apiKey: process.env.OPENAI_API_KEY,
@@ -199,7 +222,15 @@ async function runStructuredAi<T>(
     };
   } catch (err) {
     await checkAndLogUsage(userId, operation, "error");
-    const msg = err instanceof Error ? err.message : "Unexpected AI request failure.";
+    let msg = err instanceof Error ? err.message : "Unexpected AI request failure.";
+    try {
+      const parsedErr = JSON.parse(msg);
+      if (parsedErr?.error?.message) {
+        msg = parsedErr.error.message;
+      }
+    } catch {
+      // Keep plain message
+    }
     return { ok: false, configured: true, error: msg };
   }
 }

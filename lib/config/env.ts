@@ -52,7 +52,7 @@ export function getSystemStatus(): SystemStatus {
   const geminiConfigured = isGeminiConfigured();
   const openAiConfigured = isOpenAiConfigured();
   const activeAiProvider = resolveAiProvider();
-  const geminiModel = process.env.GEMINI_MODEL?.trim() || "gemini-3.5-flash";
+  const geminiModel = process.env.GEMINI_MODEL?.trim() || "gemini-3.1-flash-lite";
   const openAiModel = process.env.OPENAI_MODEL?.trim() || "gpt-4o-mini";
 
   return {
