@@ -24,3 +24,8 @@ alter function public.handle_new_user() set search_path = public;
 
 -- 3. Revoke public/anon execute on internal security definer trigger functions
 revoke all on function public.handle_new_user() from public, anon, authenticated;
+
+-- 4. Extend profiles table with avatar_url and cumulative generated_cvs_count
+alter table if exists public.profiles
+  add column if not exists avatar_url text default null,
+  add column if not exists generated_cvs_count integer not null default 0;
