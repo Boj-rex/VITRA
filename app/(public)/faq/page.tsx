@@ -1,7 +1,8 @@
 import React from "react";
 import Link from "next/link";
-import { HelpCircle, MessageSquare } from "lucide-react";
-import { FaqAccordion, FAQ_ITEMS } from "@/components/public/FaqAccordion";
+import { MessageSquare } from "lucide-react";
+import { FaqAccordion } from "@/components/public/FaqAccordion";
+import { FAQ_ITEMS } from "@/lib/data/faq";
 import { WashiTape } from "@/components/scrapbook/WashiTape";
 import { JsonLd, BreadcrumbStructuredData } from "@/components/seo/JsonLd";
 
@@ -31,7 +32,7 @@ export default function FaqPage() {
   const faqSchema = {
     "@context": "https://schema.org",
     "@type": "FAQPage",
-    mainEntity: FAQ_ITEMS.map((item) => ({
+    mainEntity: (FAQ_ITEMS ?? []).map((item) => ({
       "@type": "Question",
       name: item.question,
       acceptedAnswer: {
