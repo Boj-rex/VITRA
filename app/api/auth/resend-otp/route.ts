@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { localDevDb } from "@/lib/data/local-dev-store";
-import { sendLoginOtpEmail } from "@/lib/email";
+import { otpService } from "@/lib/auth/otp-service";
 
 const resendOtpSchema = z.object({
   email: z.string().trim().email("Please enter a valid email address."),
@@ -19,7 +18,9 @@ export async function POST(request: Request) {
     }
 
     const { email } = parsed.data;
-    const cooldownCheck = localDevDb.canResendLoginOtp(email, 60);
+    const normalizedEmail = email.trim().toLowerCase();
+
+    const cooldownCheck = await otpService.canResendOtp(normalizedEmail, 60);
 
     if (!cooldownCheck.allowed) {
       return NextResponse.json(
@@ -32,40 +33,19 @@ export async function POST(request: Request) {
       );
     }
 
-    if (!cooldownCheck.userId) {
-      return NextResponse.json(
-        { ok: false, error: "No active login session found for this email. Please log in again." },
-        { status: 404 }
-      );
-    }
-
-    const user = localDevDb.getUserById(cooldownCheck.userId);
-    const { code, expiresAt } = localDevDb.createLoginOtp(cooldownCheck.userId, email, 10);
-
-    const emailResult = await sendLoginOtpEmail({
-      email,
-      fullName: user?.fullName || "Candidate",
-      code,
+    const otpResult = await otpService.createAndSendOtp({
+      email: normalizedEmail,
       expiresMinutes: 10,
     });
 
-    const isLiveEmailSent = emailResult.success && emailResult.provider !== "local_dev";
-
     return NextResponse.json({
       ok: true,
-      message: isLiveEmailSent
-        ? "A new 6-digit security code has been sent to your email."
-        : "A new security code has been generated.",
-      expiresAt,
-      emailDelivery: {
-        liveSent: isLiveEmailSent,
-        provider: emailResult.provider,
-        error: emailResult.error,
-      },
+      message: "A fresh 6-digit verification code has been sent to your email.",
+      expiresAt: otpResult.expiresAt,
+      emailDelivery: otpResult.emailDelivery,
     });
   } catch (err: unknown) {
     const errorMessage = err instanceof Error ? err.message : "Failed to resend code.";
     return NextResponse.json({ ok: false, error: errorMessage }, { status: 500 });
   }
 }
-

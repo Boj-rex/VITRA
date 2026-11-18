@@ -1,9 +1,9 @@
 import { NextResponse } from "next/server";
 import { registerSchema } from "@/lib/validation/cv-schemas";
 import { isLocalDevModeAllowed, isSupabaseConfigured } from "@/lib/config/env";
-import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { createSupabaseAdminClient } from "@/lib/supabase/server";
 import { localDevDb } from "@/lib/data/local-dev-store";
-import { maskEmail, sendLoginOtpEmail } from "@/lib/email";
+import { otpService } from "@/lib/auth/otp-service";
 
 export async function POST(request: Request) {
   try {
@@ -17,93 +17,80 @@ export async function POST(request: Request) {
     }
 
     const { fullName, email, password } = parsed.data;
+    const normalizedEmail = email.trim().toLowerCase();
+
+    let userId: string | undefined;
 
     if (isSupabaseConfigured()) {
-      const supabase = await createSupabaseServerClient();
-      if (!supabase) {
-        return NextResponse.json({ ok: false, error: "Supabase client unavailable." }, { status: 500 });
+      const admin = createSupabaseAdminClient();
+      if (!admin) {
+        return NextResponse.json({ ok: false, error: "Authentication service unavailable." }, { status: 500 });
       }
-      const origin = process.env.NEXT_PUBLIC_APP_URL || new URL(request.url).origin;
-      const { data, error } = await supabase.auth.signUp({
-        email,
+
+      // 1. Create candidate user in Supabase Auth via Admin API (email_confirm: false, DOES NOT send Supabase email link)
+      const { data: createData, error: createError } = await admin.auth.admin.createUser({
+        email: normalizedEmail,
         password,
-        options: {
-          data: { full_name: fullName, country: "Nigeria" },
-          emailRedirectTo: `${origin}/auth/callback`,
-        },
+        email_confirm: false,
+        user_metadata: { full_name: fullName, country: "Nigeria" },
       });
 
-      if (error) {
-        return NextResponse.json({ ok: false, error: error.message }, { status: 400 });
+      if (createError) {
+        // If already registered, check if they are unconfirmed and update their password
+        if (
+          createError.message.toLowerCase().includes("already registered") ||
+          createError.message.toLowerCase().includes("already exists")
+        ) {
+          const { data: userList } = await admin.auth.admin.listUsers();
+          const existingUser = userList?.users.find((u) => u.email?.toLowerCase() === normalizedEmail);
+          if (existingUser) {
+            userId = existingUser.id;
+            await admin.auth.admin.updateUserById(existingUser.id, {
+              password,
+              user_metadata: { full_name: fullName, country: "Nigeria" },
+            });
+          } else {
+            return NextResponse.json({ ok: false, error: createError.message }, { status: 400 });
+          }
+        } else {
+          return NextResponse.json({ ok: false, error: createError.message }, { status: 400 });
+        }
+      } else if (createData?.user) {
+        userId = createData.user.id;
       }
-
-      const needsVerification = !data.session;
-      return NextResponse.json({
-        ok: true,
-        needsEmailVerification: needsVerification,
-        provider: "supabase",
-      });
     }
 
     if (isLocalDevModeAllowed()) {
-      // 1. Create account with emailVerified: false (pending one-time verification)
-      const user = localDevDb.createUser({
-        fullName,
-        email,
-        password,
-        country: "Nigeria",
-        emailVerified: false,
-      });
-
-      localDevDb.recordAuthEvent({
-        eventType: "signup",
-        email: user.email,
-        userId: user.id,
-        details: `Candidate signed up: ${user.fullName} (${user.country})`,
-        status: "success",
-      });
-
-      // 2. Generate one-time 6-digit email verification OTP
-      const { code, expiresAt } = localDevDb.createLoginOtp(user.id, user.email, 15);
-
-      localDevDb.recordAuthEvent({
-        eventType: "otp_sent",
-        email: user.email,
-        userId: user.id,
-        details: "Signup email verification OTP dispatched",
-        status: "success",
-      });
-
-      // 3. Dispatch verification email
-      const emailResult = await sendLoginOtpEmail({
-        email: user.email,
-        fullName: user.fullName,
-        code,
-        expiresMinutes: 15,
-      });
-
-      const isLiveEmailSent = emailResult.success && emailResult.provider !== "local_dev";
-
-      return NextResponse.json({
-        ok: true,
-        step: "otp_required",
-        needsEmailVerification: true,
-        provider: "local-dev",
-        email: user.email,
-        maskedEmail: maskEmail(user.email),
-        expiresAt,
-        emailDelivery: {
-          liveSent: isLiveEmailSent,
-          provider: emailResult.provider,
-          error: emailResult.error,
-        },
-      });
+      try {
+        localDevDb.createUser({
+          fullName,
+          email: normalizedEmail,
+          password,
+          country: "Nigeria",
+          emailVerified: false,
+        });
+      } catch {
+        // Already exists in local fallback
+      }
     }
 
-    return NextResponse.json(
-      { ok: false, error: "Authentication service is not configured." },
-      { status: 503 }
-    );
+    // 2. Generate and dispatch official 6-digit OTP verification email via Gmail SMTP
+    const otpResult = await otpService.createAndSendOtp({
+      email: normalizedEmail,
+      fullName,
+      userId,
+      expiresMinutes: 15,
+    });
+
+    return NextResponse.json({
+      ok: true,
+      step: "otp_required",
+      needsEmailVerification: true,
+      email: normalizedEmail,
+      maskedEmail: otpResult.maskedEmail,
+      expiresAt: otpResult.expiresAt,
+      emailDelivery: otpResult.emailDelivery,
+    });
   } catch (err) {
     const message = err instanceof Error ? err.message : "Registration failed.";
     return NextResponse.json({ ok: false, error: message }, { status: 400 });

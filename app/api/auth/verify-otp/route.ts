@@ -1,7 +1,9 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { localDevDb, signSessionToken } from "@/lib/data/local-dev-store";
-import { DEV_SESSION_COOKIE } from "@/lib/auth/session";
+import { signSessionToken } from "@/lib/data/local-dev-store";
+import { DEV_SESSION_COOKIE, isSuperUser } from "@/lib/auth/session";
+import { otpService } from "@/lib/auth/otp-service";
+import { localDevDb } from "@/lib/data/local-dev-store";
 
 const verifyOtpSchema = z.object({
   email: z.string().trim().email("Please enter a valid email address."),
@@ -20,12 +22,14 @@ export async function POST(request: Request) {
     }
 
     const { email, code } = parsed.data;
-    const result = localDevDb.verifyLoginOtp(email, code);
+    const normalizedEmail = email.trim().toLowerCase();
 
-    if (!result.success || !result.user) {
+    const result = await otpService.verifyOtp(normalizedEmail, code);
+
+    if (!result.success) {
       localDevDb.recordAuthEvent({
         eventType: "otp_failed",
-        email,
+        email: normalizedEmail,
         details: result.error || "Incorrect security verification code",
         status: "error",
       });
@@ -35,27 +39,29 @@ export async function POST(request: Request) {
       );
     }
 
-    const user = result.user;
+    const isSuper = isSuperUser({ email: normalizedEmail });
+    const assignedRole: "admin" | "user" = isSuper ? "admin" : "user";
+    const userId = result.userId || "user_" + Date.now();
+
     localDevDb.recordAuthEvent({
       eventType: "otp_verified",
-      email: user.email,
-      userId: user.id,
+      email: normalizedEmail,
+      userId,
       details: "Security code verified. Account access granted.",
       status: "success",
     });
 
-    const token = signSessionToken(user.id, {
-      email: user.email,
-      role: user.role,
+    const token = signSessionToken(userId, {
+      email: normalizedEmail,
+      role: assignedRole,
     });
 
     const res = NextResponse.json({
       ok: true,
       message: "Security code verified successfully.",
       user: {
-        id: user.id,
-        email: user.email,
-        fullName: user.fullName,
+        id: userId,
+        email: normalizedEmail,
       },
     });
 
@@ -73,4 +79,3 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: false, error: errorMessage }, { status: 500 });
   }
 }
-

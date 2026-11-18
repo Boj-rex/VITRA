@@ -6,6 +6,7 @@ import { isLocalDevModeAllowed, isSupabaseConfigured } from "@/lib/config/env";
 import { localDevDb, signSessionToken } from "@/lib/data/local-dev-store";
 import { DEV_SESSION_COOKIE, isSuperUser } from "@/lib/auth/session";
 import { maskEmail, sendLoginOtpEmail } from "@/lib/email";
+import { otpService } from "@/lib/auth/otp-service";
 
 export async function POST(request: Request) {
   try {
@@ -42,6 +43,21 @@ export async function POST(request: Request) {
 
       const { data, error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) {
+        if (error.message.toLowerCase().includes("email not confirmed")) {
+          const otpResult = await otpService.createAndSendOtp({
+            email,
+            expiresMinutes: 15,
+          });
+          return NextResponse.json({
+            ok: true,
+            step: "otp_required",
+            needsEmailVerification: true,
+            email,
+            maskedEmail: otpResult.maskedEmail,
+            expiresAt: otpResult.expiresAt,
+            emailDelivery: otpResult.emailDelivery,
+          });
+        }
         return NextResponse.json({ ok: false, error: error.message }, { status: 401 });
       }
 
