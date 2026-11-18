@@ -4,9 +4,10 @@ import { ScreenCaptureProtection } from "@/components/security/ScreenCaptureProt
 import { CookieConsentBanner } from "@/components/legal/CookieConsentBanner";
 import { FloatingSupportWidget } from "@/components/support/FloatingSupportWidget";
 import { RootStructuredData } from "@/components/seo/JsonLd";
+import { getSiteUrl } from "@/lib/config/site";
 import "./globals.css";
 
-const siteUrl = (process.env.NEXT_PUBLIC_APP_URL || "https://vitra.app").replace(/\/$/, "");
+const siteUrl = getSiteUrl();
 
 export const viewport: Viewport = {
   width: "device-width",
@@ -94,6 +95,9 @@ export const metadata: Metadata = {
       "max-image-preview": "large",
       "max-snippet": -1,
     },
+  },
+  verification: {
+    google: process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION || undefined,
   },
   other: {
     "geo.region": "NG-LA",

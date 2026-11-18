@@ -1,4 +1,5 @@
 import React from "react";
+import { getSiteUrl } from "@/lib/config/site";
 
 export interface JsonLdProps {
   data: Record<string, unknown>;
@@ -13,7 +14,7 @@ export function JsonLd({ data }: JsonLdProps) {
   );
 }
 
-const BASE_URL = (process.env.NEXT_PUBLIC_APP_URL || "https://vitra.app").replace(/\/$/, "");
+const BASE_URL = getSiteUrl();
 
 export function RootStructuredData() {
   const organizationSchema = {

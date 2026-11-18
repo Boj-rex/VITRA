@@ -1,7 +1,8 @@
 import type { MetadataRoute } from "next";
+import { getSiteUrl } from "@/lib/config/site";
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  const baseUrl = (process.env.NEXT_PUBLIC_APP_URL || "https://vitra.app").replace(/\/$/, "");
+  const baseUrl = getSiteUrl();
   const now = new Date();
 
   return [
