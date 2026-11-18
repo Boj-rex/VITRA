@@ -1,9 +1,10 @@
 import { NextResponse } from "next/server";
+import { cookies } from "next/headers";
+import { createServerClient } from "@supabase/ssr";
 import { loginSchema } from "@/lib/validation/cv-schemas";
 import { isLocalDevModeAllowed, isSupabaseConfigured } from "@/lib/config/env";
-import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { localDevDb, signSessionToken } from "@/lib/data/local-dev-store";
-import { DEV_SESSION_COOKIE } from "@/lib/auth/session";
+import { DEV_SESSION_COOKIE, isSuperUser } from "@/lib/auth/session";
 import { maskEmail, sendLoginOtpEmail } from "@/lib/email";
 
 export async function POST(request: Request) {
@@ -18,44 +19,49 @@ export async function POST(request: Request) {
     }
 
     const { email, password } = parsed.data;
-    const otpEnabled = process.env.LOGIN_OTP_ENABLED !== "false";
 
     if (isSupabaseConfigured()) {
-      const supabase = await createSupabaseServerClient();
-      if (!supabase) {
-        return NextResponse.json({ ok: false, error: "Supabase client unavailable." }, { status: 500 });
-      }
+      const response = NextResponse.json({ ok: true, provider: "supabase" });
+      const url = process.env.NEXT_PUBLIC_SUPABASE_URL!.trim();
+      const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!.trim();
+      const cookieStore = await cookies();
+
+      const supabase = createServerClient(url, anonKey, {
+        cookies: {
+          getAll() {
+            return cookieStore.getAll();
+          },
+          setAll(cookiesToSet) {
+            cookiesToSet.forEach(({ name, value, options }) => {
+              cookieStore.set(name, value, options);
+              response.cookies.set(name, value, options);
+            });
+          },
+        },
+      });
+
       const { data, error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) {
         return NextResponse.json({ ok: false, error: error.message }, { status: 401 });
       }
 
-      if (otpEnabled && data.user) {
-        // Sign out temporary Supabase session until OTP verification completes
-        await supabase.auth.signOut();
-        const fullName =
-          (data.user.user_metadata?.full_name as string) ||
-          data.user.email?.split("@")[0] ||
-          "Candidate";
-        const { code, expiresAt } = localDevDb.createLoginOtp(data.user.id, email, 10);
-
-        await sendLoginOtpEmail({
-          email,
-          fullName,
-          code,
-          expiresMinutes: 10,
+      // Attach companion session cookie for guaranteed middleware recognition
+      if (data.user) {
+        const isSuper = isSuperUser({ email: data.user.email });
+        const token = signSessionToken(data.user.id, {
+          email: data.user.email || email,
+          role: isSuper ? "admin" : "user",
         });
-
-        return NextResponse.json({
-          ok: true,
-          step: "otp_required",
-          email,
-          maskedEmail: maskEmail(email),
-          expiresAt,
+        response.cookies.set(DEV_SESSION_COOKIE, token, {
+          httpOnly: true,
+          secure: process.env.NODE_ENV === "production",
+          sameSite: "lax",
+          path: "/",
+          maxAge: 7 * 24 * 60 * 60,
         });
       }
 
-      return NextResponse.json({ ok: true, provider: "supabase" });
+      return response;
     }
 
     if (isLocalDevModeAllowed()) {

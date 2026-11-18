@@ -215,9 +215,15 @@ export async function proxy(request: NextRequest) {
       data: { user },
     } = await supabase.auth.getUser();
 
+    const devToken = request.cookies.get("vitra_dev_session")?.value;
+    const devSession = parseDevToken(devToken);
+    const hasAuth = Boolean(user) || Boolean(devSession?.userId);
+    const authEmail = user?.email || devSession?.email;
+    const isSuper = isSuperUserEmail(authEmail) || devSession?.role === "admin";
+
     // Enforce superuser isolation on /backoffice & /api/backoffice
     if (isSuperUserRoute(pathname)) {
-      if (!user) {
+      if (!hasAuth) {
         if (pathname.startsWith("/api/")) {
           return applySecurityHeaders(
             NextResponse.json({ ok: false, error: "Not found" }, { status: 404 })
@@ -229,7 +235,6 @@ export async function proxy(request: NextRequest) {
         return applySecurityHeaders(NextResponse.redirect(url));
       }
 
-      const isSuper = isSuperUserEmail(user.email);
       if (!isSuper) {
         if (pathname.startsWith("/api/")) {
           return applySecurityHeaders(
@@ -242,14 +247,14 @@ export async function proxy(request: NextRequest) {
       }
     }
 
-    if (isProtectedRoute(pathname) && !user) {
+    if (isProtectedRoute(pathname) && !hasAuth) {
       const url = request.nextUrl.clone();
       url.pathname = "/login";
       url.searchParams.set("next", pathname);
       return applySecurityHeaders(NextResponse.redirect(url));
     }
 
-    if (isAuthPage(pathname) && user) {
+    if (isAuthPage(pathname) && hasAuth) {
       const url = request.nextUrl.clone();
       url.pathname = "/dashboard";
       return applySecurityHeaders(NextResponse.redirect(url));
