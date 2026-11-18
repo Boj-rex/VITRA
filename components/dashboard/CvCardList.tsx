@@ -157,8 +157,8 @@ export function CvCardList({
           role="status"
           aria-live="polite"
           className={`rounded-lg border px-4 py-2.5 text-sm ${feedback.type === "success"
-              ? "border-[#173B30]/30 bg-[#173B30]/8 dark:bg-[#0E2E23] text-[#173B30] dark:text-[#34D399]"
-              : "border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-950/50 text-red-900 dark:text-red-300"
+            ? "border-[#173B30]/30 bg-[#173B30]/8 dark:bg-[#0E2E23] text-[#173B30] dark:text-[#34D399]"
+            : "border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-950/50 text-red-900 dark:text-red-300"
             }`}
         >
           {feedback.text}
