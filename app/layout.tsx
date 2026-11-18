@@ -122,6 +122,19 @@ export default function RootLayout({
           href="https://fonts.googleapis.com/css2?family=Caveat:wght@500;600;700&family=Press+Start+2P&family=Space+Grotesk:wght@500;700&display=swap"
           rel="stylesheet"
         />
+        {/* Instant High-Priority Preload for Left & Right Interactive Characters */}
+        <link
+          rel="preload"
+          href="/characters/woman/anim_000.webp"
+          as="image"
+          type="image/webp"
+        />
+        <link
+          rel="preload"
+          href="/characters/man/anim_000.webp"
+          as="image"
+          type="image/webp"
+        />
         <Script
           id="vitra-theme-init"
           src="/theme-init.js"

@@ -71,36 +71,98 @@ export function InteractiveFloatingCharacter({
   const [isHovered, setIsHovered] = useState(false);
   const [bubbleText, setBubbleText] = useState("");
   const [activeChapterLabel, setActiveChapterLabel] = useState(chapters[0].label);
+  const [hasDrawnCanvas, setHasDrawnCanvas] = useState(false);
 
-  // 1. Silent Preloading of all 192 frames in memory
+  const initialFrame = initialAction === 2 ? 128 : initialAction === 3 ? 64 : 0;
+
+  // 1. Prioritized Cooperative Preloading of frames (Both characters load initial frames instantly)
   useEffect(() => {
-    const preloaded: HTMLImageElement[] = [];
+    let isCancelled = false;
+    const targetInitialFrame = frameIndexRef.current;
+    const preloaded: HTMLImageElement[] = new Array(TOTAL_FRAMES);
 
-    for (let i = 0; i < TOTAL_FRAMES; i++) {
-      const img = new Image();
-      img.src = `/characters/${character}/anim_${String(i).padStart(3, "0")}.webp`;
-      preloaded.push(img);
-    }
-    imagesRef.current = preloaded;
+    const getFrameUrl = (idx: number) =>
+      `/characters/${character}/anim_${String(idx).padStart(3, "0")}.webp`;
 
-    // Immediately draw initial frame
-    const drawInitial = () => {
-      const canvas = canvasRef.current;
-      if (!canvas) return;
-      const ctx = canvas.getContext("2d");
-      const firstImg = preloaded[frameIndexRef.current] || preloaded[0];
-      if (ctx && firstImg && firstImg.complete && firstImg.naturalWidth > 0) {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        ctx.drawImage(firstImg, 0, 0, canvas.width, canvas.height);
-      }
+    const loadFrame = (idx: number): Promise<HTMLImageElement> => {
+      return new Promise((resolve) => {
+        if (preloaded[idx]) {
+          resolve(preloaded[idx]);
+          return;
+        }
+        const img = new Image();
+        img.src = getFrameUrl(idx);
+        img.onload = () => {
+          preloaded[idx] = img;
+          resolve(img);
+        };
+        img.onerror = () => {
+          resolve(img);
+        };
+      });
     };
 
-    const firstImg = preloaded[frameIndexRef.current] || preloaded[0];
-    if (firstImg.complete) {
-      drawInitial();
-    } else {
-      firstImg.onload = drawInitial;
-    }
+    // Step 1: Immediately load and draw the initial frame
+    loadFrame(targetInitialFrame).then((firstImg) => {
+      if (isCancelled) return;
+      const canvas = canvasRef.current;
+      if (canvas) {
+        const ctx = canvas.getContext("2d");
+        if (ctx && firstImg.complete && firstImg.naturalWidth > 0) {
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+          ctx.drawImage(firstImg, 0, 0, canvas.width, canvas.height);
+          setHasDrawnCanvas(true);
+        }
+      }
+
+      // Step 2: Buffer immediate upcoming 16 frames & chapter anchors (0, 64, 128)
+      const bufferPromises: Promise<HTMLImageElement>[] = [];
+      for (let offset = 1; offset <= 16; offset++) {
+        const nextIdx = (targetInitialFrame + offset) % TOTAL_FRAMES;
+        bufferPromises.push(loadFrame(nextIdx));
+      }
+      [0, 64, 128].forEach((anchorIdx) => {
+        if (!preloaded[anchorIdx]) {
+          bufferPromises.push(loadFrame(anchorIdx));
+        }
+      });
+
+      Promise.all(bufferPromises).then(() => {
+        if (isCancelled) return;
+
+        // Step 3: Progressively stream the remaining frames in small gentle batches
+        // Prevents network connection saturation so man and woman stream cooperatively
+        let batchStart = 0;
+        const loadNextBatch = () => {
+          if (isCancelled || batchStart >= TOTAL_FRAMES) return;
+          const batchEnd = Math.min(batchStart + 12, TOTAL_FRAMES);
+          for (let i = batchStart; i < batchEnd; i++) {
+            if (!preloaded[i]) {
+              loadFrame(i);
+            }
+          }
+          batchStart = batchEnd;
+          if (batchStart < TOTAL_FRAMES) {
+            if (typeof window !== "undefined" && "requestIdleCallback" in window) {
+              (window as unknown as { requestIdleCallback: (cb: () => void, opts: { timeout: number }) => void }).requestIdleCallback(
+                () => loadNextBatch(),
+                { timeout: 150 }
+              );
+            } else {
+              setTimeout(loadNextBatch, 50);
+            }
+          }
+        };
+
+        loadNextBatch();
+      });
+    });
+
+    imagesRef.current = preloaded;
+
+    return () => {
+      isCancelled = true;
+    };
   }, [character]);
 
   // 2. High-Performance Double-Buffered Canvas Animation Loop (12 FPS = 83.3ms)
@@ -142,6 +204,7 @@ export function InteractiveFloatingCharacter({
         if (img && img.complete && img.naturalWidth > 0) {
           ctx.clearRect(0, 0, canvas.width, canvas.height);
           ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+          setHasDrawnCanvas(true);
         }
       }
 
@@ -332,6 +395,18 @@ export function InteractiveFloatingCharacter({
               imageRendering: "auto",
             }}
           />
+          {/* Instant High-Priority Poster: Guarantees female & male characters appear instantly at the exact same moment on first load */}
+          {!hasDrawnCanvas && (
+            <img
+              src={`/characters/${character}/anim_${String(initialFrame).padStart(3, "0")}.webp`}
+              alt=""
+              width={480}
+              height={720}
+              fetchPriority="high"
+              decoding="async"
+              className="w-full h-auto drop-shadow-[0_12px_24px_rgba(0,0,0,0.30)] absolute inset-0 select-none pointer-events-none"
+            />
+          )}
         </div>
 
         {/* Chapter Badge Mounted on the Platform Front (Interactive on Mobile & PC) */}
