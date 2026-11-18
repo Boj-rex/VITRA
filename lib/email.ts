@@ -45,7 +45,12 @@ export const DEFAULT_NO_REPLY_EMAIL = "no-reply@vitra.app";
  * (login security OTP codes and official payment receipts).
  */
 export function getNoReplyEmail(): string {
-  return (process.env.NO_REPLY_EMAIL || DEFAULT_NO_REPLY_EMAIL).trim();
+  return (
+    process.env.NO_REPLY_EMAIL ||
+    process.env.SMTP_FROM_EMAIL ||
+    process.env.EMAIL_FROM_ADDRESS ||
+    DEFAULT_NO_REPLY_EMAIL
+  ).trim();
 }
 
 /**
@@ -244,6 +249,7 @@ Click 'Reply' in your email client to respond directly to ${inquiry.email}.
  */
 export async function sendSupportInquiryEmail(inquiry: SupportInquiry): Promise<EmailDispatchResult> {
   const recipient = (process.env.SUPPORT_RECIPIENT_EMAIL || DEFAULT_RECIPIENT).trim();
+  const noReplyEmail = getNoReplyEmail();
   const subjectLine = `[Vitra Support] [${inquiry.category || "Inquiry"}] ${inquiry.subject}`;
   const htmlBody = buildSupportEmailHtml(inquiry, recipient);
   const textBody = buildSupportEmailText(inquiry, recipient);
@@ -319,8 +325,13 @@ export async function sendSupportInquiryEmail(inquiry: SupportInquiry): Promise<
           }
       );
 
+      const fromDisplay =
+        process.env.EMAIL_SUPPORT_FROM ||
+        process.env.SMTP_FROM ||
+        `"Vitra Support Desk" <${noReplyEmail}>`;
+
       await transporter.sendMail({
-        from: `"Vitra CV Studio" <${smtpUser}>`,
+        from: fromDisplay,
         to: recipient,
         replyTo: `"${inquiry.name}" <${inquiry.email}>`,
         subject: subjectLine,
@@ -527,7 +538,7 @@ export async function sendLoginOtpEmail(params: LoginOtpEmailParams): Promise<Em
   // 1. Resend API
   if (resendApiKey) {
     try {
-      const fromAddress = process.env.EMAIL_NO_REPLY_FROM || process.env.EMAIL_FROM || `Vitra Security (No-Reply) <${noReplyEmail}>`;
+      const fromAddress = process.env.EMAIL_NO_REPLY_FROM || process.env.EMAIL_FROM || `Vitra Security <${noReplyEmail}>`;
       const res = await fetch("https://api.resend.com/emails", {
         method: "POST",
         headers: {
@@ -537,7 +548,7 @@ export async function sendLoginOtpEmail(params: LoginOtpEmailParams): Promise<Em
         body: JSON.stringify({
           from: fromAddress,
           to: [recipient],
-          reply_to: noReplyEmail,
+          reply_to: `Vitra Security <${noReplyEmail}>`,
           subject: subjectLine,
           html: htmlBody,
           text: textBody,
@@ -581,9 +592,10 @@ export async function sendLoginOtpEmail(params: LoginOtpEmailParams): Promise<Em
           }
       );
 
-      const fromDisplay = isGmail
-        ? `"Vitra Security (No-Reply)" <${smtpUser}>`
-        : `"Vitra Security (No-Reply)" <${noReplyEmail}>`;
+      const fromDisplay =
+        process.env.EMAIL_NO_REPLY_FROM ||
+        process.env.SMTP_FROM ||
+        `"Vitra Security" <${noReplyEmail}>`;
 
       await transporter.sendMail({
         from: fromDisplay,
@@ -853,12 +865,12 @@ For billing support or questions, please visit ${process.env.NEXT_PUBLIC_APP_URL
   const smtpHost = process.env.SMTP_HOST || "smtp.gmail.com";
   const smtpPort = Number(process.env.SMTP_PORT) || 465;
   const smtpSecure = process.env.SMTP_SECURE === "true" || smtpPort === 465;
-  const smtpUser = process.env.SMTP_USER || "Bolajim@gmail.com";
+  const smtpUser = (process.env.SMTP_USER || process.env.SUPPORT_RECIPIENT_EMAIL || DEFAULT_RECIPIENT).trim();
 
   // 1. Resend API
   if (resendApiKey) {
     try {
-      const fromAddress = process.env.EMAIL_BILLING_FROM || process.env.EMAIL_FROM || `Vitra Billing (No-Reply) <${noReplyEmail}>`;
+      const fromAddress = process.env.EMAIL_BILLING_FROM || process.env.EMAIL_FROM || `Vitra Billing <${noReplyEmail}>`;
       const res = await fetch("https://api.resend.com/emails", {
         method: "POST",
         headers: {
@@ -868,7 +880,7 @@ For billing support or questions, please visit ${process.env.NEXT_PUBLIC_APP_URL
         body: JSON.stringify({
           from: fromAddress,
           to: [recipient],
-          reply_to: noReplyEmail,
+          reply_to: `Vitra Security <${noReplyEmail}>`,
           subject: subjectLine,
           html: htmlBody,
           text: textBody,
@@ -905,9 +917,10 @@ For billing support or questions, please visit ${process.env.NEXT_PUBLIC_APP_URL
           }
       );
 
-      const fromDisplay = isGmail
-        ? `"Vitra Billing (No-Reply)" <${smtpUser}>`
-        : `"Vitra Billing (No-Reply)" <${noReplyEmail}>`;
+      const fromDisplay =
+        process.env.EMAIL_BILLING_FROM ||
+        process.env.SMTP_FROM ||
+        `"Vitra Billing" <${noReplyEmail}>`;
 
       await transporter.sendMail({
         from: fromDisplay,
