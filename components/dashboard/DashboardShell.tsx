@@ -50,7 +50,7 @@ function SidebarContent({
   onNavigate: () => void;
 }) {
   return (
-    <div className="flex h-full flex-col justify-between p-4 font-tech">
+    <div className="flex min-h-full flex-col justify-between p-4 font-tech">
       <div>
         {/* Brand Logo & Theme Switcher */}
         <div className="px-2 py-2 flex items-center justify-between gap-2">
@@ -179,23 +179,22 @@ export function DashboardShell({
   }
 
   return (
-    <div className="flex min-h-screen bg-drafting-grid overflow-x-hidden">
-      {/* Desktop Sidebar */}
-      <aside className="hidden w-64 shrink-0 border-r-2 border-black dark:border-[#2D3548] bg-white dark:bg-[#181C28] lg:block">
-        <div className="sticky top-0 h-screen">
-          <SidebarContent
-            pathname={pathname}
-            user={user}
-            systemStatus={systemStatus}
-            loggingOut={loggingOut}
-            onLogout={handleLogout}
-            onNavigate={() => setMobileNavOpen(false)}
-          />
-        </div>
+    <div className="min-h-screen bg-drafting-grid">
+      {/* Desktop Fixed Stationary Sidebar (Stays locked on screen when scrolling) */}
+      <aside className="hidden lg:flex fixed inset-y-0 left-0 z-20 w-64 flex-col border-r-2 border-black dark:border-[#2D3548] bg-white dark:bg-[#181C28] overflow-y-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
+        <SidebarContent
+          pathname={pathname}
+          user={user}
+          systemStatus={systemStatus}
+          loggingOut={loggingOut}
+          onLogout={handleLogout}
+          onNavigate={() => setMobileNavOpen(false)}
+        />
       </aside>
 
-      {/* Mobile Top Bar & Drawer */}
-      <div className="flex flex-1 flex-col min-w-0 overflow-x-hidden">
+      {/* Main Content Area (Offset by sidebar width on desktop) */}
+      <div className="flex flex-1 flex-col min-w-0 lg:pl-64">
+        {/* Mobile Top Bar */}
         <header className="sticky top-0 z-30 flex h-14 items-center justify-between border-b-2 border-black dark:border-[#2D3548] bg-white dark:bg-[#181C28] px-4 lg:hidden font-tech">
           <VitraLogo href="/dashboard" compact />
           <div className="flex items-center gap-2">
@@ -227,13 +226,14 @@ export function DashboardShell({
           </div>
         </header>
 
+        {/* Mobile Drawer */}
         {mobileNavOpen && (
           <div className="fixed inset-0 z-40 flex lg:hidden">
             <div
               className="fixed inset-0 bg-black/60 backdrop-blur-sm"
               onClick={() => setMobileNavOpen(false)}
             />
-            <div className="relative z-50 w-72 max-w-[85vw] bg-white dark:bg-[#181C28] border-r-2 border-black dark:border-[#2D3548]">
+            <div className="relative z-50 w-72 max-w-[85vw] h-full overflow-y-auto bg-white dark:bg-[#181C28] border-r-2 border-black dark:border-[#2D3548]">
               <SidebarContent
                 pathname={pathname}
                 user={user}
