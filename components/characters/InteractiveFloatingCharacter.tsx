@@ -90,7 +90,7 @@ export function InteractiveFloatingCharacter({
     const preloaded: HTMLImageElement[] = new Array(totalFrames);
 
     const getFrameUrl = (idx: number) =>
-      `/characters/${character}/anim_${String(idx).padStart(3, "0")}.webp?v=1080p_seamless_v5`;
+      `/characters/${character}/anim_${String(idx).padStart(3, "0")}.webp?v=pure_1080p_v7`;
 
     const loadFrame = (idx: number): Promise<HTMLImageElement> => {
       return new Promise((resolve) => {
@@ -185,22 +185,16 @@ export function InteractiveFloatingCharacter({
         if (holdCountRef.current > 0) {
           holdCountRef.current--;
         } else {
-          let nextIdx: number;
-          if (character === "woman") {
-            // Woman uses seamless circular forward loop (0 -> 119 -> 0 without jarring direction shifts)
-            nextIdx = (frameIndexRef.current + 1) % totalFrames;
-          } else {
-            // Man uses bidirectional ping-pong loop
-            nextIdx = frameIndexRef.current + directionRef.current;
-            if (nextIdx >= totalFrames) {
-              nextIdx = totalFrames - 2;
-              directionRef.current = -1;
-              holdCountRef.current = HOLD_FRAMES;
-            } else if (nextIdx < 0) {
-              nextIdx = 1;
-              directionRef.current = 1;
-              holdCountRef.current = HOLD_FRAMES;
-            }
+          // Bidirectional ping-pong loop (0 -> 119 -> 0) with HOLD_FRAMES = 0 for seamless, fluid turnaround
+          let nextIdx = frameIndexRef.current + directionRef.current;
+          if (nextIdx >= totalFrames) {
+            nextIdx = totalFrames - 2;
+            directionRef.current = -1;
+            holdCountRef.current = HOLD_FRAMES;
+          } else if (nextIdx < 0) {
+            nextIdx = 1;
+            directionRef.current = 1;
+            holdCountRef.current = HOLD_FRAMES;
           }
 
           // Anti-glitch guard: Only advance if the target frame is fully loaded in memory
