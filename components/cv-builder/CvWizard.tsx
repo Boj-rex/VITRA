@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
   CheckCircle2,
@@ -219,6 +219,27 @@ export function CvWizard({ initialStep = "profile" }: { initialStep?: WizardStep
   }, [content, careerProfile, templateId, settings, title, cvId, loadingDraft, persistCv]);
 
   const currentIdx = STEPS.findIndex((s) => s.key === step);
+
+  const previewCv = useMemo(() => {
+    const cloned = JSON.parse(JSON.stringify(content)) as StructuredCvContent;
+    // Populate professional title from target role if not explicitly set
+    if (!cloned.personalInfo.professionalTitle?.trim() && sumCtx.targetRole?.trim()) {
+      cloned.personalInfo.professionalTitle = sumCtx.targetRole.trim();
+    }
+    // If summary is not generated/typed yet, compose live draft preview from prompt inputs
+    if (!cloned.summary.trim()) {
+      const summaryParts = [
+        sumCtx.targetRole?.trim() ? `Aspiring ${sumCtx.targetRole.trim()}` : "",
+        sumCtx.background?.trim() ? `with a strong background in ${sumCtx.background.trim()}` : "",
+        sumCtx.strengths?.trim() ? `Key strengths: ${sumCtx.strengths.trim()}` : "",
+        sumCtx.relevantExperience?.trim() ? `Practical experience includes ${sumCtx.relevantExperience.trim()}` : "",
+      ].filter(Boolean);
+      if (summaryParts.length > 0) {
+        cloned.summary = summaryParts.join(". ").replace(/\.\./g, ".") + ".";
+      }
+    }
+    return cloned;
+  }, [content, sumCtx]);
 
   async function goToStep(targetStep: WizardStepKey, validateCurrent = true) {
     setStepError(null);
@@ -2197,28 +2218,64 @@ export function CvWizard({ initialStep = "profile" }: { initialStep?: WizardStep
           role="dialog"
           aria-modal="true"
           aria-label="Live CV Preview"
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/55 p-4 overflow-y-auto"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 overflow-y-auto"
         >
-          <div className="relative flex max-h-[90vh] w-full max-w-4xl flex-col rounded-2xl border border-[#E6E0D5] dark:border-[#333C52] bg-[#F6F3ED] dark:bg-[#1E2333] shadow-2xl">
-            <div className="flex items-center justify-between border-b border-[#E6E0D5] dark:border-[#333C52] bg-[#FFFEFA] dark:bg-[#242A3D] px-5 py-3 rounded-t-2xl">
-              <div>
-                <p className="text-sm font-semibold text-[#252821] dark:text-white">Live CV Preview</p>
-                <p className="text-xs text-[#77786F] dark:text-[#94A3B8]">
-                  Updates automatically as you fill in your information.
-                </p>
+          <div className="relative flex max-h-[92vh] w-full max-w-4xl flex-col rounded-2xl border border-[#E6E0D5] dark:border-[#333C52] bg-[#F6F3ED] dark:bg-[#1E2333] shadow-2xl">
+            <div className="border-b border-[#E6E0D5] dark:border-[#333C52] bg-[#FFFEFA] dark:bg-[#242A3D] px-5 py-4 rounded-t-2xl">
+              <div className="flex items-center justify-between">
+                <div>
+                  <div className="flex items-center gap-2">
+                    <p className="text-sm font-semibold text-[#252821] dark:text-white">Live CV Preview</p>
+                    <span className="rounded-full bg-[#173B30] text-[#FECB0D] dark:bg-[#FECB0D] dark:text-[#173B30] px-2.5 py-0.5 text-[11px] font-bold font-tech">
+                      Step {currentIdx + 1} of 7 · {STEPS[currentIdx]?.label}
+                    </span>
+                  </div>
+                  <p className="text-xs text-[#77786F] dark:text-[#94A3B8] mt-0.5">
+                    Real-time progress preview. Filled sections show live content; upcoming sections show formatted guides.
+                  </p>
+                </div>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setShowPreviewModal(false)}
+                >
+                  <X className="h-4 w-4" />
+                  Close
+                </Button>
               </div>
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={() => setShowPreviewModal(false)}
-              >
-                <X className="h-4 w-4" />
-                Close
-              </Button>
+
+              {/* Progress Steps Bar inside Preview Modal */}
+              <div className="mt-3 flex items-center gap-1.5 overflow-x-auto pb-1 text-[11px] font-tech">
+                {STEPS.map((s, idx) => {
+                  const isDone = idx < currentIdx;
+                  const isCurrent = idx === currentIdx;
+                  return (
+                    <div
+                      key={s.key}
+                      className={cn(
+                        "flex items-center gap-1 px-2.5 py-1 rounded-md shrink-0 border",
+                        isCurrent
+                          ? "bg-[#173B30] text-white border-[#173B30] font-bold dark:bg-[#34D399] dark:text-black"
+                          : isDone
+                            ? "bg-emerald-50 text-emerald-800 border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-800"
+                            : "bg-slate-50 text-slate-500 border-slate-200 dark:bg-slate-900 dark:text-slate-400 dark:border-slate-800"
+                      )}
+                    >
+                      <span>{isDone ? "✓" : isCurrent ? "●" : "○"}</span>
+                      <span>{s.shortLabel}</span>
+                    </div>
+                  );
+                })}
+              </div>
             </div>
             <div className="overflow-y-auto p-4 sm:p-6">
-              <CvDocumentPreview cv={content} templateId={templateId} settings={settings} />
+              <CvDocumentPreview
+                cv={previewCv}
+                templateId={templateId}
+                settings={settings}
+                showProgressPlaceholders={true}
+              />
             </div>
           </div>
         </div>

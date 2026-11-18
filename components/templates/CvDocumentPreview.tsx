@@ -8,6 +8,7 @@ interface CvDocumentPreviewProps {
   templateId: TemplateId;
   settings: CvEditorSettings;
   className?: string;
+  showProgressPlaceholders?: boolean;
 }
 
 export function CvDocumentPreview({
@@ -15,6 +16,7 @@ export function CvDocumentPreview({
   templateId,
   settings,
   className,
+  showProgressPlaceholders,
 }: CvDocumentPreviewProps) {
   const hidden = new Set(settings.hiddenSections || []);
   const order: SectionKey[] =
@@ -266,19 +268,50 @@ export function CvDocumentPreview({
         {order.map((section) => {
           if (hidden.has(section)) return null;
 
-          if (section === "summary" && cv.summary.trim()) {
-            return (
-              <section key="summary">
-                <SectionHeader title="Professional Summary" />
-                <p className="whitespace-pre-line text-[#111111]">{cv.summary}</p>
-              </section>
-            );
+          if (section === "summary") {
+            if (cv.summary.trim()) {
+              return (
+                <section key="summary">
+                  <SectionHeader title="Professional Summary" />
+                  <p className="whitespace-pre-line text-[#111111]">{cv.summary}</p>
+                </section>
+              );
+            }
+            if (showProgressPlaceholders) {
+              return (
+                <section key="summary" className="opacity-75 border border-dashed border-[#CBD5E1] p-2.5 rounded bg-amber-50/30">
+                  <SectionHeader title="Professional Summary" />
+                  <p className="italic text-[0.88em] text-[#64748B]">
+                    Professional summary in progress. Fill in your focus details in Step 3 to review here.
+                  </p>
+                </section>
+              );
+            }
+            return null;
           }
 
           if (section === "experience") {
             const hasFormal = cv.experience.length > 0;
             const hasAlt = cv.alternativeExperience.length > 0;
-            if (!hasFormal && !hasAlt) return null;
+            if (!hasFormal && !hasAlt) {
+              if (showProgressPlaceholders) {
+                return (
+                  <section key="experience" className="opacity-75 border border-dashed border-[#CBD5E1] p-2.5 rounded bg-slate-50/40">
+                    <SectionHeader title="Work Experience / Relevant Training" />
+                    <div className="space-y-1">
+                      <div className="flex justify-between text-[0.9em] text-[#64748B]">
+                        <span className="font-semibold italic">e.g. Job Title / Trainee / NYSC Corps Member — Organization</span>
+                        <span className="italic">Month Year – Present</span>
+                      </div>
+                      <p className="text-[0.85em] italic text-[#94A3B8]">
+                        Work history, industrial training (SIWES), and leadership accomplishments will appear here once added in Step 5.
+                      </p>
+                    </div>
+                  </section>
+                );
+              }
+              return null;
+            }
 
             return (
               <section key="experience">
@@ -343,7 +376,27 @@ export function CvDocumentPreview({
             );
           }
 
-          if (section === "education" && cv.education.length > 0) {
+          if (section === "education") {
+            if (cv.education.length === 0) {
+              if (showProgressPlaceholders) {
+                return (
+                  <section key="education" className="opacity-75 border border-dashed border-[#CBD5E1] p-2.5 rounded bg-slate-50/40">
+                    <SectionHeader title="Education" />
+                    <div className="space-y-1">
+                      <div className="flex justify-between text-[0.9em] text-[#64748B]">
+                        <span className="font-semibold italic">e.g. Degree / Major — Institution Name</span>
+                        <span className="italic">Year – Year</span>
+                      </div>
+                      <p className="text-[0.85em] italic text-[#94A3B8]">
+                        Academic qualifications (BSc, HND, ND, SIWES, SSCE) and achievements will appear here once added in Step 4.
+                      </p>
+                    </div>
+                  </section>
+                );
+              }
+              return null;
+            }
+
             return (
               <section key="education">
                 <SectionHeader title="Education" />
@@ -380,7 +433,21 @@ export function CvDocumentPreview({
             );
           }
 
-          if (section === "skills" && cv.skills.length > 0) {
+          if (section === "skills") {
+            if (cv.skills.length === 0) {
+              if (showProgressPlaceholders) {
+                return (
+                  <section key="skills" className="opacity-75 border border-dashed border-[#CBD5E1] p-2.5 rounded bg-slate-50/40">
+                    <SectionHeader title="Skills & Competencies" />
+                    <p className="text-[0.85em] italic text-[#94A3B8]">
+                      Core technical, domain, and soft skills tailored for ATS indexing will appear here once selected in Step 6.
+                    </p>
+                  </section>
+                );
+              }
+              return null;
+            }
+
             return (
               <section key="skills">
                 <SectionHeader title="Skills" />
@@ -418,7 +485,21 @@ export function CvDocumentPreview({
             );
           }
 
-          if (section === "projects" && cv.projects.length > 0) {
+          if (section === "projects") {
+            if (cv.projects.length === 0) {
+              if (showProgressPlaceholders) {
+                return (
+                  <section key="projects" className="opacity-75 border border-dashed border-[#CBD5E1] p-2.5 rounded bg-slate-50/40">
+                    <SectionHeader title="Projects" />
+                    <p className="text-[0.85em] italic text-[#94A3B8]">
+                      Portfolio projects, capstones, and key initiatives will appear here once added in Step 7.
+                    </p>
+                  </section>
+                );
+              }
+              return null;
+            }
+
             return (
               <section key="projects">
                 <SectionHeader title="Projects" />
@@ -449,7 +530,21 @@ export function CvDocumentPreview({
             );
           }
 
-          if (section === "certifications" && cv.certifications.length > 0) {
+          if (section === "certifications") {
+            if (cv.certifications.length === 0) {
+              if (showProgressPlaceholders) {
+                return (
+                  <section key="certifications" className="opacity-75 border border-dashed border-[#CBD5E1] p-2.5 rounded bg-slate-50/40">
+                    <SectionHeader title="Certifications" />
+                    <p className="text-[0.85em] italic text-[#94A3B8]">
+                      Industry certifications and professional licenses will appear here once added in Step 7.
+                    </p>
+                  </section>
+                );
+              }
+              return null;
+            }
+
             return (
               <section key="certifications">
                 <SectionHeader title="Certifications" />
