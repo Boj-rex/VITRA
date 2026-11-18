@@ -261,47 +261,7 @@ export async function sendSupportInquiryEmail(inquiry: SupportInquiry): Promise<
   const smtpPort = parseInt(process.env.SMTP_PORT || "465", 10);
   const smtpSecure = process.env.SMTP_SECURE === "true" || smtpPort === 465;
 
-  // 1. Try Resend if configured
-  if (resendApiKey) {
-    try {
-      const fromAddress = process.env.EMAIL_FROM || "Vitra Support <onboarding@resend.dev>";
-      const res = await fetch("https://api.resend.com/emails", {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${resendApiKey}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          from: fromAddress,
-          to: [recipient],
-          reply_to: `${inquiry.name} <${inquiry.email}>`,
-          subject: subjectLine,
-          html: htmlBody,
-          text: textBody,
-        }),
-      });
-
-      if (!res.ok) {
-        const errorData = await res.text();
-        throw new Error(`Resend API returned status ${res.status}: ${errorData}`);
-      }
-
-      persistInquiryLocally(inquiry, "resend", "DELIVERED");
-      return {
-        success: true,
-        provider: "resend",
-        recipient,
-        savedLocally: true,
-      };
-    } catch (err: unknown) {
-      const errorMessage = err instanceof Error ? err.message : String(err);
-      console.error("[Email] Resend dispatch failed:", errorMessage);
-      persistInquiryLocally(inquiry, "resend", "FAILED", errorMessage);
-      // Fall through to SMTP or Local dev
-    }
-  }
-
-  // 2. Try Nodemailer SMTP (e.g. Gmail App Password or custom SMTP) if password provided
+  // 1. Try Nodemailer SMTP (e.g. Gmail App Password or custom SMTP) if password provided
   if (smtpPass && smtpHost) {
     try {
       const isGmail = smtpHost.includes("gmail");
@@ -350,7 +310,47 @@ export async function sendSupportInquiryEmail(inquiry: SupportInquiry): Promise<
       const errorMessage = err instanceof Error ? err.message : String(err);
       console.error("[Email] SMTP dispatch failed:", errorMessage);
       persistInquiryLocally(inquiry, "smtp", "FAILED", errorMessage);
-      // Fall through to local dev backup
+      // Fall through to Resend or Local dev backup
+    }
+  }
+
+  // 2. Try Resend if configured
+  if (resendApiKey) {
+    try {
+      const fromAddress = process.env.EMAIL_FROM || "Vitra Support <onboarding@resend.dev>";
+      const res = await fetch("https://api.resend.com/emails", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${resendApiKey}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          from: fromAddress,
+          to: [recipient],
+          reply_to: `${inquiry.name} <${inquiry.email}>`,
+          subject: subjectLine,
+          html: htmlBody,
+          text: textBody,
+        }),
+      });
+
+      if (!res.ok) {
+        const errorData = await res.text();
+        throw new Error(`Resend API returned status ${res.status}: ${errorData}`);
+      }
+
+      persistInquiryLocally(inquiry, "resend", "DELIVERED");
+      return {
+        success: true,
+        provider: "resend",
+        recipient,
+        savedLocally: true,
+      };
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : String(err);
+      console.error("[Email] Resend dispatch failed:", errorMessage);
+      persistInquiryLocally(inquiry, "resend", "FAILED", errorMessage);
+      // Fall through to Local dev
     }
   }
 
@@ -535,50 +535,7 @@ export async function sendLoginOtpEmail(params: LoginOtpEmailParams): Promise<Em
   const smtpPort = parseInt(process.env.SMTP_PORT || "465", 10);
   const smtpSecure = process.env.SMTP_SECURE === "true" || smtpPort === 465;
 
-  // 1. Resend API
-  if (resendApiKey) {
-    try {
-      const fromAddress =
-        process.env.EMAIL_NO_REPLY_FROM ||
-        process.env.EMAIL_FROM ||
-        "Vitra Security <onboarding@resend.dev>";
-      const res = await fetch("https://api.resend.com/emails", {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${resendApiKey}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          from: fromAddress,
-          to: [recipient],
-          reply_to: `Vitra Security (No-Reply) <${noReplyEmail}>`,
-          subject: subjectLine,
-          html: htmlBody,
-          text: textBody,
-          headers: {
-            "Auto-Submitted": "auto-generated",
-            "X-Auto-Response-Suppress": "All",
-          },
-        }),
-      });
-
-      if (!res.ok) {
-        const errorText = await res.text();
-        throw new Error(`Resend returned status ${res.status}: ${errorText}`);
-      }
-
-      return {
-        success: true,
-        provider: "resend",
-        recipient,
-        savedLocally: true,
-      };
-    } catch (err: unknown) {
-      console.warn("[Email] Resend OTP dispatch failed, falling back to SMTP:", err instanceof Error ? err.message : err);
-    }
-  }
-
-  // 2. Nodemailer SMTP (Gmail or custom SMTP)
+  // 1. Nodemailer SMTP (Gmail or custom SMTP) — Primary Delivery
   if (smtpPass && smtpHost) {
     const isGmail = smtpHost.includes("gmail");
     try {
@@ -623,14 +580,50 @@ export async function sendLoginOtpEmail(params: LoginOtpEmailParams): Promise<Em
       };
     } catch (err: unknown) {
       const errorMessage = err instanceof Error ? err.message : String(err);
-      console.error("[Email] SMTP OTP dispatch failed:", errorMessage);
+      console.error("[Email] SMTP OTP dispatch failed, attempting fallback:", errorMessage);
+    }
+  }
+
+  // 2. Resend API (Fallback if SMTP unavailable or failed)
+  if (resendApiKey) {
+    try {
+      const fromAddress =
+        process.env.EMAIL_NO_REPLY_FROM ||
+        process.env.EMAIL_FROM ||
+        "Vitra Security <onboarding@resend.dev>";
+      const res = await fetch("https://api.resend.com/emails", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${resendApiKey}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          from: fromAddress,
+          to: [recipient],
+          reply_to: `Vitra Security (No-Reply) <${noReplyEmail}>`,
+          subject: subjectLine,
+          html: htmlBody,
+          text: textBody,
+          headers: {
+            "Auto-Submitted": "auto-generated",
+            "X-Auto-Response-Suppress": "All",
+          },
+        }),
+      });
+
+      if (!res.ok) {
+        const errorText = await res.text();
+        throw new Error(`Resend returned status ${res.status}: ${errorText}`);
+      }
+
       return {
-        success: false,
-        provider: isGmail ? "gmail" : "smtp",
-        error: errorMessage,
+        success: true,
+        provider: "resend",
         recipient,
         savedLocally: true,
       };
+    } catch (err: unknown) {
+      console.warn("[Email] Resend OTP dispatch failed:", err instanceof Error ? err.message : err);
     }
   }
 
@@ -871,45 +864,7 @@ For billing support or questions, please visit ${process.env.NEXT_PUBLIC_APP_URL
   const smtpSecure = process.env.SMTP_SECURE === "true" || smtpPort === 465;
   const smtpUser = (process.env.SMTP_USER || process.env.SUPPORT_RECIPIENT_EMAIL || DEFAULT_RECIPIENT).trim();
 
-  // 1. Resend API
-  if (resendApiKey) {
-    try {
-      const fromAddress =
-        process.env.EMAIL_BILLING_FROM ||
-        process.env.EMAIL_FROM ||
-        "Vitra Billing <onboarding@resend.dev>";
-      const res = await fetch("https://api.resend.com/emails", {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${resendApiKey}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          from: fromAddress,
-          to: [recipient],
-          reply_to: `Vitra Billing (No-Reply) <${noReplyEmail}>`,
-          subject: subjectLine,
-          html: htmlBody,
-          text: textBody,
-          headers: {
-            "Auto-Submitted": "auto-generated",
-            "X-Auto-Response-Suppress": "All",
-          },
-        }),
-      });
-
-      if (!res.ok) {
-        const errorText = await res.text();
-        throw new Error(`Resend returned status ${res.status}: ${errorText}`);
-      }
-
-      return { success: true, provider: "resend", recipient, savedLocally: true };
-    } catch (err) {
-      console.warn("[Email] Resend receipt dispatch failed, falling back to SMTP:", err instanceof Error ? err.message : err);
-    }
-  }
-
-  // 2. Nodemailer SMTP (Gmail or custom SMTP)
+  // 1. Nodemailer SMTP (Gmail or custom SMTP) — Primary Delivery
   if (smtpPass && smtpHost) {
     const isGmail = smtpHost.includes("gmail");
     try {
@@ -954,14 +909,45 @@ For billing support or questions, please visit ${process.env.NEXT_PUBLIC_APP_URL
       };
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : String(err);
-      console.error("[Email] SMTP receipt dispatch failed:", errorMessage);
-      return {
-        success: false,
-        provider: isGmail ? "gmail" : "smtp",
-        error: errorMessage,
-        recipient,
-        savedLocally: true,
-      };
+      console.error("[Email] SMTP receipt dispatch failed, attempting fallback:", errorMessage);
+    }
+  }
+
+  // 2. Resend API (Fallback if SMTP unavailable or failed)
+  if (resendApiKey) {
+    try {
+      const fromAddress =
+        process.env.EMAIL_BILLING_FROM ||
+        process.env.EMAIL_FROM ||
+        "Vitra Billing <onboarding@resend.dev>";
+      const res = await fetch("https://api.resend.com/emails", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${resendApiKey}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          from: fromAddress,
+          to: [recipient],
+          reply_to: `Vitra Billing (No-Reply) <${noReplyEmail}>`,
+          subject: subjectLine,
+          html: htmlBody,
+          text: textBody,
+          headers: {
+            "Auto-Submitted": "auto-generated",
+            "X-Auto-Response-Suppress": "All",
+          },
+        }),
+      });
+
+      if (!res.ok) {
+        const errorText = await res.text();
+        throw new Error(`Resend returned status ${res.status}: ${errorText}`);
+      }
+
+      return { success: true, provider: "resend", recipient, savedLocally: true };
+    } catch (err) {
+      console.warn("[Email] Resend receipt dispatch failed:", err instanceof Error ? err.message : err);
     }
   }
 
