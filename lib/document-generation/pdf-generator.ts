@@ -15,9 +15,9 @@ let cachedCalibriItalic: Buffer | null = null;
 
 function resolveFontBuffer(filename: string): Buffer | null {
   const localAssetPath = path.join(process.cwd(), "assets", "fonts", filename);
-  if (fs.existsSync(localAssetPath)) {
+  if (fs.existsSync(/*turbopackIgnore: true*/ localAssetPath)) {
     try {
-      return fs.readFileSync(localAssetPath);
+      return fs.readFileSync(/*turbopackIgnore: true*/ localAssetPath);
     } catch {
       // Continue to fallback
     }
@@ -26,9 +26,9 @@ function resolveFontBuffer(filename: string): Buffer | null {
   // Windows system fonts fallback
   const winFontsDir = process.env.WINDIR ? path.join(process.env.WINDIR, "Fonts") : "C:\\Windows\\Fonts";
   const winFontPath = path.join(winFontsDir, filename);
-  if (fs.existsSync(winFontPath)) {
+  if (fs.existsSync(/*turbopackIgnore: true*/ winFontPath)) {
     try {
-      return fs.readFileSync(winFontPath);
+      return fs.readFileSync(/*turbopackIgnore: true*/ winFontPath);
     } catch {
       // Fall through
     }

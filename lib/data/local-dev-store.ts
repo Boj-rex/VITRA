@@ -165,8 +165,8 @@ function resolveDataRoot(): string {
   // 3. In normal local dev, use process.cwd()/.vitra-dev-data, but verify writability
   const defaultDir = path.join(process.cwd(), ".vitra-dev-data");
   try {
-    if (!fs.existsSync(defaultDir)) {
-      fs.mkdirSync(defaultDir, { recursive: true });
+    if (!fs.existsSync(/*turbopackIgnore: true*/ defaultDir)) {
+      fs.mkdirSync(/*turbopackIgnore: true*/ defaultDir, { recursive: true });
     }
     return defaultDir;
   } catch {
@@ -450,8 +450,8 @@ export const localDevDb = {
 
   saveUserAvatar(userId: string, fileName: string, buffer: Buffer, mimeType: string): string {
     const avatarsDir = getAvatarsRoot();
-    if (!fs.existsSync(avatarsDir)) {
-      fs.mkdirSync(avatarsDir, { recursive: true });
+    if (!fs.existsSync(/*turbopackIgnore: true*/ avatarsDir)) {
+      fs.mkdirSync(/*turbopackIgnore: true*/ avatarsDir, { recursive: true });
     }
     // Delete any previous avatar files for this user
     try {
@@ -477,7 +477,7 @@ export const localDevDb = {
 
   deleteUserAvatar(userId: string): boolean {
     const avatarsDir = getAvatarsRoot();
-    if (fs.existsSync(avatarsDir)) {
+    if (fs.existsSync(/*turbopackIgnore: true*/ avatarsDir)) {
       try {
         const files = fs.readdirSync(avatarsDir);
         for (const f of files) {
@@ -497,7 +497,7 @@ export const localDevDb = {
     // Sanitize filename to prevent directory traversal
     const safe = path.basename(filename);
     const fullPath = path.join(getAvatarsRoot(), safe);
-    if (!fs.existsSync(fullPath)) return null;
+    if (!fs.existsSync(/*turbopackIgnore: true*/ fullPath)) return null;
 
     const ext = path.extname(safe).toLowerCase();
     const mimeMap: Record<string, string> = {
@@ -652,7 +652,7 @@ export const localDevDb = {
   listSupportInquiries(): any[] {
     try {
       const file = path.join(getDataRoot(), "support-inquiries.json");
-      if (fs.existsSync(file)) {
+      if (fs.existsSync(/*turbopackIgnore: true*/ file)) {
         const raw = fs.readFileSync(file, "utf8");
         const list = JSON.parse(raw);
         if (Array.isArray(list)) {
@@ -668,7 +668,7 @@ export const localDevDb = {
   listReceiptEmails(): any[] {
     try {
       const file = path.join(getDataRoot(), "receipt-emails.json");
-      if (fs.existsSync(file)) {
+      if (fs.existsSync(/*turbopackIgnore: true*/ file)) {
         const raw = fs.readFileSync(file, "utf8");
         const list = JSON.parse(raw);
         if (Array.isArray(list)) {
@@ -753,7 +753,7 @@ export const localDevDb = {
     // Also clear receipt-emails.json if present
     try {
       const receiptEmailsFile = path.join(getDataRoot(), "receipt-emails.json");
-      if (fs.existsSync(receiptEmailsFile)) {
+      if (fs.existsSync(/*turbopackIgnore: true*/ receiptEmailsFile)) {
         fs.writeFileSync(receiptEmailsFile, "[]\n", "utf8");
       }
     } catch (e) {
@@ -920,7 +920,7 @@ export const localDevDb = {
     if (!exists) return false;
 
     const userUploadDir = path.join(getUploadsRoot(), userId);
-    if (fs.existsSync(userUploadDir)) {
+    if (fs.existsSync(/*turbopackIgnore: true*/ userUploadDir)) {
       fs.rmSync(userUploadDir, { recursive: true, force: true });
     }
 
@@ -1045,8 +1045,8 @@ export const localDevDb = {
 
   saveUploadedFile(userId: string, fileName: string, buffer: Buffer): string {
     const userDir = path.join(getUploadsRoot(), userId);
-    if (!fs.existsSync(userDir)) {
-      fs.mkdirSync(userDir, { recursive: true });
+    if (!fs.existsSync(/*turbopackIgnore: true*/ userDir)) {
+      fs.mkdirSync(/*turbopackIgnore: true*/ userDir, { recursive: true });
     }
     const safeName = `${Date.now()}-${fileName.replace(/[^a-zA-Z0-9._-]+/g, "_")}`;
     const relativePath = `${userId}/${safeName}`;
@@ -1078,7 +1078,7 @@ export const localDevDb = {
     const record = data.uploads.find((u) => u.id === uploadId && u.userId === userId);
     if (!record) return false;
     const absPath = path.join(getUploadsRoot(), record.originalFilePath);
-    if (fs.existsSync(absPath)) {
+    if (fs.existsSync(/*turbopackIgnore: true*/ absPath)) {
       fs.rmSync(absPath, { force: true });
     }
     data.uploads = data.uploads.filter((u) => !(u.id === uploadId && u.userId === userId));

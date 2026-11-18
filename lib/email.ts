@@ -60,8 +60,8 @@ function persistInquiryLocally(
 ) {
   try {
     const dir = getEmailDataDir();
-    if (!fs.existsSync(dir)) {
-      fs.mkdirSync(dir, { recursive: true });
+    if (!fs.existsSync(/*turbopackIgnore: true*/ dir)) {
+      fs.mkdirSync(/*turbopackIgnore: true*/ dir, { recursive: true });
     }
     const file = path.join(dir, "support-inquiries.json");
     let existing: Array<{
@@ -78,7 +78,7 @@ function persistInquiryLocally(
       ip?: string;
     }> = [];
 
-    if (fs.existsSync(file)) {
+    if (fs.existsSync(/*turbopackIgnore: true*/ file)) {
       try {
         const raw = fs.readFileSync(file, "utf8");
         existing = JSON.parse(raw);
@@ -495,10 +495,10 @@ export async function sendLoginOtpEmail(params: LoginOtpEmailParams): Promise<Em
   // Record OTP code locally for dev reference
   try {
     const dir = getEmailDataDir();
-    if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+    if (!fs.existsSync(/*turbopackIgnore: true*/ dir)) fs.mkdirSync(/*turbopackIgnore: true*/ dir, { recursive: true });
     const file = path.join(dir, "otp-codes.json");
     let codes: Array<any> = [];
-    if (fs.existsSync(file)) {
+    if (fs.existsSync(/*turbopackIgnore: true*/ file)) {
       try {
         codes = JSON.parse(fs.readFileSync(file, "utf8"));
       } catch {
@@ -832,10 +832,10 @@ For billing support or questions, please visit ${process.env.NEXT_PUBLIC_APP_URL
   // Always persist a record locally so no receipt is lost
   try {
     const dir = getEmailDataDir();
-    if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+    if (!fs.existsSync(/*turbopackIgnore: true*/ dir)) fs.mkdirSync(/*turbopackIgnore: true*/ dir, { recursive: true });
     const file = path.join(dir, "receipt-emails.json");
     let history: Array<PaymentReceiptEmailInput & { sentAt: string }> = [];
-    if (fs.existsSync(file)) {
+    if (fs.existsSync(/*turbopackIgnore: true*/ file)) {
       try {
         history = JSON.parse(fs.readFileSync(file, "utf8"));
       } catch {
