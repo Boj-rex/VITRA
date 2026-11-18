@@ -304,8 +304,8 @@ export function InteractiveFloatingCharacter({
       ref={asideRef}
       aria-label={`${character === "man" ? "Stylist" : "Executive"} animated character`}
       className={`fixed bottom-1 sm:bottom-6 lg:bottom-8 z-30 pointer-events-none transition-all duration-300 block ${side === "left"
-          ? "left-0.5 sm:left-4 lg:left-7"
-          : "right-0.5 sm:right-4 lg:right-7"
+        ? "left-0.5 sm:left-4 lg:left-7"
+        : "right-0.5 sm:right-4 lg:right-7"
         }`}
     >
       {/* Speech / Reaction Bubble (Click or Tap to dismiss or cycle) */}
