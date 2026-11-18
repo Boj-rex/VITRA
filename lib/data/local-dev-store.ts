@@ -115,16 +115,16 @@ export interface LocalAuthAuditLog {
   id: string;
   timestamp: string;
   eventType:
-    | "login_success"
-    | "login_failed"
-    | "otp_sent"
-    | "otp_verified"
-    | "otp_failed"
-    | "signup"
-    | "password_reset_request"
-    | "password_reset_success"
-    | "plan_activated"
-    | "admin_action";
+  | "login_success"
+  | "login_failed"
+  | "otp_sent"
+  | "otp_verified"
+  | "otp_failed"
+  | "signup"
+  | "password_reset_request"
+  | "password_reset_success"
+  | "plan_activated"
+  | "admin_action";
   email: string;
   userId?: string | null;
   details?: string;
@@ -218,14 +218,14 @@ function ensureStore(): LocalStoreData {
     if (!fs.existsSync(/*turbopackIgnore: true*/ uploadsDir)) {
       fs.mkdirSync(/*turbopackIgnore: true*/ uploadsDir, { recursive: true });
     }
-  } catch {}
+  } catch { }
 
   const avatarsDir = getAvatarsRoot();
   try {
     if (!fs.existsSync(/*turbopackIgnore: true*/ avatarsDir)) {
       fs.mkdirSync(/*turbopackIgnore: true*/ avatarsDir, { recursive: true });
     }
-  } catch {}
+  } catch { }
 
   const storePath = getStorePath();
   try {
@@ -460,10 +460,10 @@ export const localDevDb = {
         if (f.startsWith(`avatar_${userId}_`)) {
           try {
             fs.rmSync(path.join(avatarsDir, f), { force: true });
-          } catch {}
+          } catch { }
         }
       }
-    } catch {}
+    } catch { }
 
     const ext = path.extname(fileName).toLowerCase() || ".png";
     const safeExt = [".jpg", ".jpeg", ".png", ".webp", ".gif"].includes(ext) ? ext : ".png";
@@ -484,10 +484,10 @@ export const localDevDb = {
           if (f.startsWith(`avatar_${userId}_`)) {
             try {
               fs.rmSync(path.join(avatarsDir, f), { force: true });
-            } catch {}
+            } catch { }
           }
         }
-      } catch {}
+      } catch { }
     }
     this.updateUserProfile(userId, { avatarUrl: null });
     return true;
