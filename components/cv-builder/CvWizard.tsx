@@ -103,6 +103,8 @@ export function CvWizard({ initialStep = "profile" }: { initialStep?: WizardStep
   };
 
   const [initialLoaded, setInitialLoaded] = useState(false);
+  const [resumePrompt, setResumePrompt] = useState<{ id: string; title: string; updatedAt: string } | null>(null);
+  const hasUserModified = useRef(false);
 
   // Load existing draft on mount if cvId is present in URL or cached in session
   useEffect(() => {
@@ -113,6 +115,18 @@ export function CvWizard({ initialStep = "profile" }: { initialStep?: WizardStep
 
     if (!effectiveCvId) {
       setInitialLoaded(true);
+      // Check if user has an existing unfinished draft they can resume
+      fetch("/api/cvs")
+        .then((r) => r.json())
+        .then((d) => {
+          if (d.ok && Array.isArray(d.cvs)) {
+            const draft = d.cvs.find((c: CvRecord) => c.status === "draft");
+            if (draft) {
+              setResumePrompt({ id: draft.id, title: draft.title, updatedAt: draft.updatedAt });
+            }
+          }
+        })
+        .catch(() => { });
       return;
     }
 
@@ -263,18 +277,46 @@ export function CvWizard({ initialStep = "profile" }: { initialStep?: WizardStep
     [cvId, step]
   );
 
-  // Debounced autosave when editing an existing draft
+  const dynamicTitle = useMemo(() => {
+    const name = content.personalInfo.fullName?.trim();
+    const role = content.personalInfo.professionalTitle?.trim() || sumCtx.targetRole?.trim();
+    if (name && role) return `${name} - ${role}`;
+    if (name) return `${name}'s CV`;
+    if (role) return `${role} CV Draft`;
+    return title && title !== "My Vitra CV" ? title : "My Vitra CV";
+  }, [content.personalInfo.fullName, content.personalInfo.professionalTitle, sumCtx.targetRole, title]);
+
+  useEffect(() => {
+    if (initialLoaded) {
+      hasUserModified.current = true;
+    }
+  }, [content, careerProfile, templateId, settings, initialLoaded]);
+
+  // Debounced autosave: automatically provisions and updates drafts
   const autosaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   useEffect(() => {
-    if (!cvId || loadingDraft || !initialLoaded) return;
+    if (loadingDraft || !initialLoaded || !hasUserModified.current) return;
     if (autosaveTimer.current) clearTimeout(autosaveTimer.current);
     autosaveTimer.current = setTimeout(() => {
-      persistCv(content, careerProfile, templateId, settings, title);
+      persistCv(content, careerProfile, templateId, settings, dynamicTitle);
     }, 1200);
     return () => {
       if (autosaveTimer.current) clearTimeout(autosaveTimer.current);
     };
-  }, [content, careerProfile, templateId, settings, title, cvId, loadingDraft, initialLoaded, persistCv]);
+  }, [content, careerProfile, templateId, settings, dynamicTitle, cvId, loadingDraft, initialLoaded, persistCv]);
+
+  // Immediate flush whenever user switches tabs or navigates away
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "hidden" && initialLoaded && !loadingDraft && hasUserModified.current) {
+        persistCv(content, careerProfile, templateId, settings, dynamicTitle);
+      }
+    };
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    return () => {
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
+  }, [content, careerProfile, templateId, settings, dynamicTitle, initialLoaded, loadingDraft, persistCv]);
 
   const currentIdx = STEPS.findIndex((s) => s.key === step);
 
@@ -314,17 +356,14 @@ export function CvWizard({ initialStep = "profile" }: { initialStep?: WizardStep
       }
     }
 
-    const savedId = await persistCv(content, careerProfile, templateId, settings, title);
+    const savedId = await persistCv(content, careerProfile, templateId, settings, dynamicTitle);
     setStep(targetStep);
     const idParam = savedId ? `?cvId=${savedId}` : "";
     window.history.replaceState(null, "", `/create/${targetStep}${idParam}`);
   }
 
   async function handleFinishToEditor() {
-    const finalTitle =
-      title === "My Vitra CV" && content.personalInfo.fullName
-        ? `${content.personalInfo.fullName} - ${content.personalInfo.professionalTitle || "CV"}`
-        : title;
+    const finalTitle = dynamicTitle;
     const savedId = await persistCv(content, careerProfile, templateId, settings, finalTitle);
     if (savedId) {
       await fetch(`/api/cvs/${savedId}`, {
@@ -517,6 +556,66 @@ export function CvWizard({ initialStep = "profile" }: { initialStep?: WizardStep
           </Button>
         </div>
       </div>
+
+      {/* Unfinished Draft Resume Prompt */}
+      {resumePrompt && !cvId && (
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 rounded-xl border-2 border-[#173B30] dark:border-[#34D399] bg-[#E8F5E9] dark:bg-[#0E2E23] p-4 text-xs font-tech shadow-sticker-sm">
+          <div>
+            <p className="font-bold text-[#173B30] dark:text-[#34D399]">
+              Continue previous draft: <span className="underline">{resumePrompt.title}</span>?
+            </p>
+            <p className="text-[#55564E] dark:text-[#CBD5E1] text-[11px] mt-0.5">
+              You were recently working on this CV. You can resume where you left off or start fresh.
+            </p>
+          </div>
+          <div className="flex items-center gap-2 shrink-0">
+            <Button
+              type="button"
+              size="sm"
+              variant="primary"
+              onClick={() => {
+                const targetId = resumePrompt.id;
+                setCvId(targetId);
+                if (typeof window !== "undefined") {
+                  sessionStorage.setItem("vitra_active_cv_id", targetId);
+                }
+                setResumePrompt(null);
+                setLoadingDraft(true);
+                fetch(`/api/cvs/${targetId}`)
+                  .then((r) => r.json())
+                  .then((d) => {
+                    if (d.ok && d.cv) {
+                      const rec = d.cv as CvRecord;
+                      setCvId(rec.id);
+                      setTitle(rec.title);
+                      setCareerProfile(rec.careerProfile);
+                      setTemplateId(rec.templateId);
+                      setContent(rec.structuredContent);
+                      setSettings(rec.settings);
+                      window.history.replaceState(null, "", `/create/${step}?cvId=${rec.id}`);
+                    }
+                  })
+                  .finally(() => setLoadingDraft(false));
+              }}
+            >
+              Resume draft
+            </Button>
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              onClick={() => {
+                if (typeof window !== "undefined") {
+                  sessionStorage.removeItem("vitra_active_cv_id");
+                }
+                setResumePrompt(null);
+              }}
+            >
+              Start fresh
+            </Button>
+          </div>
+        </div>
+      )}
 
       {/* Clickable Stepper */}
       <nav aria-label="Wizard steps" className="grid grid-cols-2 gap-2 sm:grid-cols-7">

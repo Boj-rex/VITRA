@@ -227,13 +227,31 @@ export function CvCardList({
 
               <div className="mt-5 flex flex-wrap items-center justify-between gap-2 border-t border-[#E2DDD2] dark:border-[#333C52] pt-3.5">
                 <div className="flex flex-wrap items-center gap-2">
-                  <Link
-                    href={`/editor/${cv.id}`}
-                    className={buttonVariants({ variant: "primary", size: "sm" })}
-                  >
-                    <Edit3 className="h-3.5 w-3.5" />
-                    Open editor
-                  </Link>
+                  {cv.status === "draft" ? (
+                    <>
+                      <Link
+                        href={`/create/personal-information?cvId=${cv.id}`}
+                        className={buttonVariants({ variant: "primary", size: "sm" })}
+                      >
+                        <Edit3 className="h-3.5 w-3.5" />
+                        Continue building
+                      </Link>
+                      <Link
+                        href={`/editor/${cv.id}`}
+                        className={buttonVariants({ variant: "outline", size: "sm" })}
+                      >
+                        Open editor
+                      </Link>
+                    </>
+                  ) : (
+                    <Link
+                      href={`/editor/${cv.id}`}
+                      className={buttonVariants({ variant: "primary", size: "sm" })}
+                    >
+                      <Edit3 className="h-3.5 w-3.5" />
+                      Open editor
+                    </Link>
+                  )}
                   <Button
                     variant="outline"
                     size="sm"
