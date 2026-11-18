@@ -538,7 +538,10 @@ export async function sendLoginOtpEmail(params: LoginOtpEmailParams): Promise<Em
   // 1. Resend API
   if (resendApiKey) {
     try {
-      const fromAddress = process.env.EMAIL_NO_REPLY_FROM || process.env.EMAIL_FROM || `Vitra Security <${noReplyEmail}>`;
+      const fromAddress =
+        process.env.EMAIL_NO_REPLY_FROM ||
+        process.env.EMAIL_FROM ||
+        "Vitra Security <onboarding@resend.dev>";
       const res = await fetch("https://api.resend.com/emails", {
         method: "POST",
         headers: {
@@ -548,7 +551,7 @@ export async function sendLoginOtpEmail(params: LoginOtpEmailParams): Promise<Em
         body: JSON.stringify({
           from: fromAddress,
           to: [recipient],
-          reply_to: `Vitra Security <${noReplyEmail}>`,
+          reply_to: `Vitra Security (No-Reply) <${noReplyEmail}>`,
           subject: subjectLine,
           html: htmlBody,
           text: textBody,
@@ -560,7 +563,8 @@ export async function sendLoginOtpEmail(params: LoginOtpEmailParams): Promise<Em
       });
 
       if (!res.ok) {
-        throw new Error(`Resend returned status ${res.status}: ${await res.text()}`);
+        const errorText = await res.text();
+        throw new Error(`Resend returned status ${res.status}: ${errorText}`);
       }
 
       return {
@@ -570,7 +574,7 @@ export async function sendLoginOtpEmail(params: LoginOtpEmailParams): Promise<Em
         savedLocally: true,
       };
     } catch (err: unknown) {
-      console.error("[Email] Resend OTP dispatch failed:", err);
+      console.warn("[Email] Resend OTP dispatch failed, falling back to SMTP:", err instanceof Error ? err.message : err);
     }
   }
 
@@ -870,7 +874,10 @@ For billing support or questions, please visit ${process.env.NEXT_PUBLIC_APP_URL
   // 1. Resend API
   if (resendApiKey) {
     try {
-      const fromAddress = process.env.EMAIL_BILLING_FROM || process.env.EMAIL_FROM || `Vitra Billing <${noReplyEmail}>`;
+      const fromAddress =
+        process.env.EMAIL_BILLING_FROM ||
+        process.env.EMAIL_FROM ||
+        "Vitra Billing <onboarding@resend.dev>";
       const res = await fetch("https://api.resend.com/emails", {
         method: "POST",
         headers: {
@@ -880,7 +887,7 @@ For billing support or questions, please visit ${process.env.NEXT_PUBLIC_APP_URL
         body: JSON.stringify({
           from: fromAddress,
           to: [recipient],
-          reply_to: `Vitra Security <${noReplyEmail}>`,
+          reply_to: `Vitra Billing (No-Reply) <${noReplyEmail}>`,
           subject: subjectLine,
           html: htmlBody,
           text: textBody,
@@ -891,11 +898,14 @@ For billing support or questions, please visit ${process.env.NEXT_PUBLIC_APP_URL
         }),
       });
 
-      if (res.ok) {
-        return { success: true, provider: "resend", recipient, savedLocally: true };
+      if (!res.ok) {
+        const errorText = await res.text();
+        throw new Error(`Resend returned status ${res.status}: ${errorText}`);
       }
+
+      return { success: true, provider: "resend", recipient, savedLocally: true };
     } catch (err) {
-      console.error("[Email] Resend receipt dispatch failed:", err);
+      console.warn("[Email] Resend receipt dispatch failed, falling back to SMTP:", err instanceof Error ? err.message : err);
     }
   }
 
