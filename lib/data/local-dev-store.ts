@@ -1,6 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import crypto from "node:crypto";
+import os from "node:os";
 import type {
   CvAnalysisResult,
   CvEditorSettings,
@@ -139,8 +140,46 @@ export interface LocalLoginOtp {
   lastSentAt: string;
 }
 
+let cachedDataRoot: string | null = null;
+
+function resolveDataRoot(): string {
+  // 1. Explicit override via env variable
+  if (process.env.VITRA_DEV_DATA_DIR?.trim()) {
+    return process.env.VITRA_DEV_DATA_DIR.trim();
+  }
+
+  // 2. Serverless detection (Vercel, AWS Lambda, Netlify, etc.)
+  // On AWS Lambda / Vercel, process.cwd() is /var/task (strictly read-only).
+  // The only writable filesystem path is os.tmpdir() (/tmp).
+  const isServerless =
+    Boolean(process.env.VERCEL) ||
+    Boolean(process.env.AWS_LAMBDA_FUNCTION_NAME) ||
+    Boolean(process.env.LAMBDA_TASK_ROOT) ||
+    Boolean(process.env.NETLIFY) ||
+    process.env.NODE_ENV === "production";
+
+  if (isServerless) {
+    return path.join(os.tmpdir(), ".vitra-dev-data");
+  }
+
+  // 3. In normal local dev, use process.cwd()/.vitra-dev-data, but verify writability
+  const defaultDir = path.join(process.cwd(), ".vitra-dev-data");
+  try {
+    if (!fs.existsSync(defaultDir)) {
+      fs.mkdirSync(defaultDir, { recursive: true });
+    }
+    return defaultDir;
+  } catch {
+    // If process.cwd() is read-only or permission is denied, fallback safely to tmpdir
+    return path.join(os.tmpdir(), ".vitra-dev-data");
+  }
+}
+
 function getDataRoot(): string {
-  return process.env.VITRA_DEV_DATA_DIR?.trim() || path.join(process.cwd(), ".vitra-dev-data");
+  if (!cachedDataRoot) {
+    cachedDataRoot = resolveDataRoot();
+  }
+  return cachedDataRoot;
 }
 
 function getStorePath(): string {
@@ -156,21 +195,75 @@ function getAvatarsRoot(): string {
 }
 
 function ensureStore(): LocalStoreData {
-  const dataDir = getDataRoot();
-  if (!fs.existsSync(/*turbopackIgnore: true*/ dataDir)) {
-    fs.mkdirSync(/*turbopackIgnore: true*/ dataDir, { recursive: true });
+  let dataDir = getDataRoot();
+  try {
+    if (!fs.existsSync(/*turbopackIgnore: true*/ dataDir)) {
+      fs.mkdirSync(/*turbopackIgnore: true*/ dataDir, { recursive: true });
+    }
+  } catch {
+    // Immediate fallback to tmpdir if mkdir fails for any reason (e.g. read-only filesystem)
+    dataDir = path.join(os.tmpdir(), ".vitra-dev-data");
+    cachedDataRoot = dataDir;
+    try {
+      if (!fs.existsSync(/*turbopackIgnore: true*/ dataDir)) {
+        fs.mkdirSync(/*turbopackIgnore: true*/ dataDir, { recursive: true });
+      }
+    } catch {
+      // Ignore if cannot create
+    }
   }
+
   const uploadsDir = getUploadsRoot();
-  if (!fs.existsSync(/*turbopackIgnore: true*/ uploadsDir)) {
-    fs.mkdirSync(/*turbopackIgnore: true*/ uploadsDir, { recursive: true });
-  }
+  try {
+    if (!fs.existsSync(/*turbopackIgnore: true*/ uploadsDir)) {
+      fs.mkdirSync(/*turbopackIgnore: true*/ uploadsDir, { recursive: true });
+    }
+  } catch {}
+
   const avatarsDir = getAvatarsRoot();
-  if (!fs.existsSync(/*turbopackIgnore: true*/ avatarsDir)) {
-    fs.mkdirSync(/*turbopackIgnore: true*/ avatarsDir, { recursive: true });
-  }
+  try {
+    if (!fs.existsSync(/*turbopackIgnore: true*/ avatarsDir)) {
+      fs.mkdirSync(/*turbopackIgnore: true*/ avatarsDir, { recursive: true });
+    }
+  } catch {}
+
   const storePath = getStorePath();
-  if (!fs.existsSync(/*turbopackIgnore: true*/ storePath)) {
-    const empty: LocalStoreData = {
+  try {
+    if (!fs.existsSync(/*turbopackIgnore: true*/ storePath)) {
+      const empty: LocalStoreData = {
+        users: [],
+        cvs: [],
+        cvVersions: [],
+        uploads: [],
+        analyses: [],
+        jobDescriptions: [],
+        aiLogs: [],
+        transactions: [],
+        passwordResetTokens: [],
+        loginOtps: [],
+        authLogs: [],
+      };
+      fs.writeFileSync(/*turbopackIgnore: true*/ storePath, JSON.stringify(empty, null, 2), "utf8");
+      return empty;
+    }
+    const raw = fs.readFileSync(/*turbopackIgnore: true*/ storePath, "utf8");
+    const parsed = JSON.parse(raw) as Partial<LocalStoreData>;
+    return {
+      users: parsed.users || [],
+      cvs: parsed.cvs || [],
+      cvVersions: parsed.cvVersions || [],
+      uploads: parsed.uploads || [],
+      analyses: parsed.analyses || [],
+      jobDescriptions: parsed.jobDescriptions || [],
+      aiLogs: parsed.aiLogs || [],
+      transactions: parsed.transactions || [],
+      passwordResetTokens: parsed.passwordResetTokens || [],
+      loginOtps: parsed.loginOtps || [],
+      authLogs: parsed.authLogs || [],
+      systemSettings: parsed.systemSettings || undefined,
+    };
+  } catch {
+    return {
       users: [],
       cvs: [],
       cvVersions: [],
@@ -183,30 +276,16 @@ function ensureStore(): LocalStoreData {
       loginOtps: [],
       authLogs: [],
     };
-    fs.writeFileSync(/*turbopackIgnore: true*/ storePath, JSON.stringify(empty, null, 2), "utf8");
-    return empty;
   }
-  const raw = fs.readFileSync(/*turbopackIgnore: true*/ storePath, "utf8");
-  const parsed = JSON.parse(raw) as Partial<LocalStoreData>;
-  return {
-    users: parsed.users || [],
-    cvs: parsed.cvs || [],
-    cvVersions: parsed.cvVersions || [],
-    uploads: parsed.uploads || [],
-    analyses: parsed.analyses || [],
-    jobDescriptions: parsed.jobDescriptions || [],
-    aiLogs: parsed.aiLogs || [],
-    transactions: parsed.transactions || [],
-    passwordResetTokens: parsed.passwordResetTokens || [],
-    loginOtps: parsed.loginOtps || [],
-    authLogs: parsed.authLogs || [],
-    systemSettings: parsed.systemSettings || undefined,
-  };
 }
 
 function writeStore(data: LocalStoreData) {
-  const storePath = getStorePath();
-  fs.writeFileSync(storePath, JSON.stringify(data, null, 2), "utf8");
+  try {
+    const storePath = getStorePath();
+    fs.writeFileSync(storePath, JSON.stringify(data, null, 2), "utf8");
+  } catch (err) {
+    console.error("[LocalDevStore] Failed to write store:", err);
+  }
 }
 
 export function hashPassword(password: string): string {

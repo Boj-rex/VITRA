@@ -1,6 +1,24 @@
 import nodemailer from "nodemailer";
 import fs from "fs";
 import path from "path";
+import os from "os";
+
+function getEmailDataDir(): string {
+  if (process.env.VITRA_DEV_DATA_DIR?.trim()) {
+    return process.env.VITRA_DEV_DATA_DIR.trim();
+  }
+  const isServerless =
+    Boolean(process.env.VERCEL) ||
+    Boolean(process.env.AWS_LAMBDA_FUNCTION_NAME) ||
+    Boolean(process.env.LAMBDA_TASK_ROOT) ||
+    Boolean(process.env.NETLIFY) ||
+    process.env.NODE_ENV === "production";
+
+  if (isServerless) {
+    return path.join(os.tmpdir(), ".vitra-dev-data");
+  }
+  return path.join(process.cwd(), ".vitra-dev-data");
+}
 
 export interface SupportInquiry {
   name: string;
@@ -41,7 +59,7 @@ function persistInquiryLocally(
   errorMessage?: string
 ) {
   try {
-    const dir = path.join(process.cwd(), ".vitra-dev-data");
+    const dir = getEmailDataDir();
     if (!fs.existsSync(dir)) {
       fs.mkdirSync(dir, { recursive: true });
     }
@@ -476,7 +494,7 @@ export async function sendLoginOtpEmail(params: LoginOtpEmailParams): Promise<Em
 
   // Record OTP code locally for dev reference
   try {
-    const dir = path.join(process.cwd(), ".vitra-dev-data");
+    const dir = getEmailDataDir();
     if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
     const file = path.join(dir, "otp-codes.json");
     let codes: Array<any> = [];
@@ -813,7 +831,7 @@ For billing support or questions, please visit ${process.env.NEXT_PUBLIC_APP_URL
 
   // Always persist a record locally so no receipt is lost
   try {
-    const dir = path.join(process.cwd(), ".vitra-dev-data");
+    const dir = getEmailDataDir();
     if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
     const file = path.join(dir, "receipt-emails.json");
     let history: Array<PaymentReceiptEmailInput & { sentAt: string }> = [];
