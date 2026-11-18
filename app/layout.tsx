@@ -97,7 +97,9 @@ export const metadata: Metadata = {
     },
   },
   verification: {
-    google: process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION || undefined,
+    google:
+      process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION ||
+      "msY3JcY4QlFX2tjn6UfL3-OvufNhl-WE7g1rBhv-bJI",
   },
   other: {
     "geo.region": "NG-LA",
