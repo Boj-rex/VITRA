@@ -14,9 +14,10 @@ interface ChapterMeta {
   quote: string;
 }
 
-const TOTAL_FRAMES = 192; // 16 seconds at 12 fps from exact reference video
+const MAN_TOTAL_FRAMES = 192; // 16 seconds at 12 fps
+const WOMAN_TOTAL_FRAMES = 120; // 10 seconds at 12 fps from clipboard reference video
 
-// 3 Story Chapters matching the continuous 16-second video progression
+// 3 Story Chapters matching the continuous video progression
 const MAN_CHAPTERS: ChapterMeta[] = [
   {
     startFrame: 0,
@@ -38,18 +39,18 @@ const MAN_CHAPTERS: ChapterMeta[] = [
 const WOMAN_CHAPTERS: ChapterMeta[] = [
   {
     startFrame: 0,
-    label: "Checking Blazer & Stance",
-    quote: "Checking presentation... Executive styling: 10/10. 🌸",
+    label: "Reviewing Your CV",
+    quote: "Reviewing candidate CV... Clean typography, 98% ATS score! 📋✨",
   },
   {
-    startFrame: 64,
-    label: "Executive Confidence",
-    quote: "Poised, professional, and ready to outshine 500 applicants! 🎯",
+    startFrame: 40,
+    label: "Executive Assessment",
+    quote: "Assessing qualifications... +42% revenue impact verified. Hired! 🎯",
   },
   {
-    startFrame: 128,
-    label: "Reading Your CV",
-    quote: "Analyzing CV layout... Clean typography, 98% ATS score! 📋✨",
+    startFrame: 80,
+    label: "Boardroom Ready",
+    quote: "Executive formatting: 10/10. Ready to outshine 500 applicants! 💼🌸",
   },
 ];
 
@@ -62,24 +63,31 @@ export function InteractiveFloatingCharacter({
   const containerRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const imagesRef = useRef<HTMLImageElement[]>([]);
-  const frameIndexRef = useRef(initialAction === 2 ? 128 : initialAction === 3 ? 64 : 0);
+
+  const totalFrames = character === "woman" ? WOMAN_TOTAL_FRAMES : MAN_TOTAL_FRAMES;
+  const chapters = character === "man" ? MAN_CHAPTERS : WOMAN_CHAPTERS;
+
+  const initialFrame =
+    initialAction === 2
+      ? chapters[2].startFrame
+      : initialAction === 3
+        ? chapters[1].startFrame
+        : chapters[0].startFrame;
+
+  const frameIndexRef = useRef(initialFrame);
   const directionRef = useRef(1);
   const holdCountRef = useRef(0);
-
-  const chapters = character === "man" ? MAN_CHAPTERS : WOMAN_CHAPTERS;
 
   const [isHovered, setIsHovered] = useState(false);
   const [bubbleText, setBubbleText] = useState("");
   const [activeChapterLabel, setActiveChapterLabel] = useState(chapters[0].label);
   const [hasDrawnCanvas, setHasDrawnCanvas] = useState(false);
 
-  const initialFrame = initialAction === 2 ? 128 : initialAction === 3 ? 64 : 0;
-
   // 1. Prioritized Cooperative Preloading of frames (Both characters load initial frames instantly)
   useEffect(() => {
     let isCancelled = false;
     const targetInitialFrame = frameIndexRef.current;
-    const preloaded: HTMLImageElement[] = new Array(TOTAL_FRAMES);
+    const preloaded: HTMLImageElement[] = new Array(totalFrames);
 
     const getFrameUrl = (idx: number) =>
       `/characters/${character}/anim_${String(idx).padStart(3, "0")}.webp`;
@@ -115,15 +123,15 @@ export function InteractiveFloatingCharacter({
         }
       }
 
-      // Step 2: Buffer immediate upcoming 16 frames & chapter anchors (0, 64, 128)
+      // Step 2: Buffer immediate upcoming 16 frames & chapter anchors
       const bufferPromises: Promise<HTMLImageElement>[] = [];
       for (let offset = 1; offset <= 16; offset++) {
-        const nextIdx = (targetInitialFrame + offset) % TOTAL_FRAMES;
+        const nextIdx = (targetInitialFrame + offset) % totalFrames;
         bufferPromises.push(loadFrame(nextIdx));
       }
-      [0, 64, 128].forEach((anchorIdx) => {
-        if (!preloaded[anchorIdx]) {
-          bufferPromises.push(loadFrame(anchorIdx));
+      chapters.forEach((chap) => {
+        if (!preloaded[chap.startFrame]) {
+          bufferPromises.push(loadFrame(chap.startFrame));
         }
       });
 
@@ -134,15 +142,15 @@ export function InteractiveFloatingCharacter({
         // Prevents network connection saturation so man and woman stream cooperatively
         let batchStart = 0;
         const loadNextBatch = () => {
-          if (isCancelled || batchStart >= TOTAL_FRAMES) return;
-          const batchEnd = Math.min(batchStart + 12, TOTAL_FRAMES);
+          if (isCancelled || batchStart >= totalFrames) return;
+          const batchEnd = Math.min(batchStart + 12, totalFrames);
           for (let i = batchStart; i < batchEnd; i++) {
             if (!preloaded[i]) {
               loadFrame(i);
             }
           }
           batchStart = batchEnd;
-          if (batchStart < TOTAL_FRAMES) {
+          if (batchStart < totalFrames) {
             if (typeof window !== "undefined" && "requestIdleCallback" in window) {
               (window as unknown as { requestIdleCallback: (cb: () => void, opts: { timeout: number }) => void }).requestIdleCallback(
                 () => loadNextBatch(),
@@ -163,7 +171,7 @@ export function InteractiveFloatingCharacter({
     return () => {
       isCancelled = true;
     };
-  }, [character]);
+  }, [character, totalFrames, chapters]);
 
   // 2. High-Performance Double-Buffered Canvas Animation Loop (12 FPS = 83.3ms)
   // Seamless bidirectional loop: smoothly transitions between poses without jump cuts or popping
@@ -175,8 +183,8 @@ export function InteractiveFloatingCharacter({
 
     let animFrameId: number;
     let lastFrameTime = 0;
-    const FRAME_INTERVAL = 83.33; // 12 FPS smooth video playback rate
-    const HOLD_FRAMES = 12; // ~1.0s natural pause at key action endpoints
+    const FRAME_INTERVAL = 83.33; // 12 FPS smooth video playback rate (1.0x normal real-world speed)
+    const HOLD_FRAMES = 0; // 0 frame hold for seamless, fluid turnaround without freeze or stutter
 
     const renderLoop = (timestamp: number) => {
       if (timestamp - lastFrameTime >= FRAME_INTERVAL) {
@@ -186,14 +194,14 @@ export function InteractiveFloatingCharacter({
           holdCountRef.current--;
         } else {
           let nextIdx = frameIndexRef.current + directionRef.current;
-          if (nextIdx >= TOTAL_FRAMES) {
-            nextIdx = TOTAL_FRAMES - 1;
+          if (nextIdx >= totalFrames) {
+            nextIdx = totalFrames - 2;
             directionRef.current = -1;
-            holdCountRef.current = HOLD_FRAMES; // Pause naturally while reading CV
+            holdCountRef.current = HOLD_FRAMES;
           } else if (nextIdx < 0) {
-            nextIdx = 0;
+            nextIdx = 1;
             directionRef.current = 1;
-            holdCountRef.current = HOLD_FRAMES; // Pause naturally at opening stance
+            holdCountRef.current = HOLD_FRAMES;
           }
           frameIndexRef.current = nextIdx;
         }
@@ -216,25 +224,29 @@ export function InteractiveFloatingCharacter({
     return () => {
       cancelAnimationFrame(animFrameId);
     };
-  }, [character]);
+  }, [character, totalFrames]);
 
-  // Click / Tap character to jump between story chapters (Checking Fit -> Presence -> Reading CV)
+  // Click / Tap character to jump between story chapters
   const handleCharacterClick = useCallback(() => {
-    let nextFrame = 0;
     const currentFrame = frameIndexRef.current;
-    if (currentFrame < 64) {
-      nextFrame = 64;
-    } else if (currentFrame < 128) {
-      nextFrame = 128; // Jump straight to reading CV!
+    let nextFrame = chapters[0].startFrame;
+    if (currentFrame < chapters[1].startFrame) {
+      nextFrame = chapters[1].startFrame;
+    } else if (currentFrame < chapters[2].startFrame) {
+      nextFrame = chapters[2].startFrame;
     } else {
-      nextFrame = 0;
+      nextFrame = chapters[0].startFrame;
     }
     frameIndexRef.current = nextFrame;
     directionRef.current = 1;
     holdCountRef.current = 0;
 
     const targetChapter =
-      nextFrame === 128 ? chapters[2] : nextFrame === 64 ? chapters[1] : chapters[0];
+      nextFrame === chapters[2].startFrame
+        ? chapters[2]
+        : nextFrame === chapters[1].startFrame
+          ? chapters[1]
+          : chapters[0];
     setBubbleText(targetChapter.quote);
     setActiveChapterLabel(targetChapter.label);
     setIsHovered(true);
@@ -285,7 +297,11 @@ export function InteractiveFloatingCharacter({
     setIsHovered(true);
     const currentFrame = frameIndexRef.current;
     const targetChapter =
-      currentFrame >= 128 ? chapters[2] : currentFrame >= 64 ? chapters[1] : chapters[0];
+      currentFrame >= chapters[2].startFrame
+        ? chapters[2]
+        : currentFrame >= chapters[1].startFrame
+          ? chapters[1]
+          : chapters[0];
     setActiveChapterLabel(targetChapter.label);
     if (!bubbleText) {
       setBubbleText(targetChapter.quote);
@@ -293,9 +309,9 @@ export function InteractiveFloatingCharacter({
   };
 
   const currentChapter =
-    frameIndexRef.current >= 128
+    frameIndexRef.current >= chapters[2].startFrame
       ? chapters[2]
-      : frameIndexRef.current >= 64
+      : frameIndexRef.current >= chapters[1].startFrame
         ? chapters[1]
         : chapters[0];
 
