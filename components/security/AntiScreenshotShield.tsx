@@ -19,66 +19,105 @@ export function AntiScreenshotShield({
 }: AntiScreenshotShieldProps) {
   const [isShielded, setIsShielded] = useState(false);
   const [shieldReason, setShieldReason] = useState<"blur" | "printscreen" | "shortcut">("blur");
-  const containerRef = useRef<HTMLDivElement>(null);
-  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const isPrintScreenLockedRef = useRef(false);
+  const unlockTimerRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Synchronous DOM manipulation: 0ms latency, bypasses React batching
+  const applyInstantDomLock = useCallback(() => {
+    if (typeof document !== "undefined") {
+      document.documentElement.classList.add("vitra-screen-lock-instant");
+    }
+  }, []);
+
+  const removeInstantDomLock = useCallback(() => {
+    if (typeof document !== "undefined" && !isPrintScreenLockedRef.current) {
+      document.documentElement.classList.remove("vitra-screen-lock-instant");
+    }
+  }, []);
 
   const activateShield = useCallback(
-    (reason: "blur" | "printscreen" | "shortcut", temporaryMs?: number) => {
+    (reason: "blur" | "printscreen" | "shortcut", lockDurationMs?: number) => {
       if (!enabled) return;
+      applyInstantDomLock();
       setShieldReason(reason);
       setIsShielded(true);
 
-      if (temporaryMs) {
-        if (timeoutRef.current) clearTimeout(timeoutRef.current);
-        timeoutRef.current = setTimeout(() => {
+      if (lockDurationMs) {
+        isPrintScreenLockedRef.current = true;
+        if (unlockTimerRef.current) clearTimeout(unlockTimerRef.current);
+        unlockTimerRef.current = setTimeout(() => {
+          isPrintScreenLockedRef.current = false;
           if (typeof document !== "undefined" && document.hasFocus() && !document.hidden) {
+            removeInstantDomLock();
             setIsShielded(false);
           }
-        }, temporaryMs);
+        }, lockDurationMs);
       }
     },
-    [enabled]
+    [enabled, applyInstantDomLock, removeInstantDomLock]
   );
 
   const deactivateShield = useCallback(() => {
-    if (timeoutRef.current) clearTimeout(timeoutRef.current);
+    if (unlockTimerRef.current) clearTimeout(unlockTimerRef.current);
+    isPrintScreenLockedRef.current = false;
+    removeInstantDomLock();
     setIsShielded(false);
-  }, []);
+  }, [removeInstantDomLock]);
 
   useEffect(() => {
-    if (!enabled) return;
+    if (!enabled || typeof window === "undefined") return;
 
-    // 1. Immediate blur handler
+    // 1. Instant Synchronous Blur Handler
     const handleBlur = () => {
+      applyInstantDomLock();
       activateShield("blur");
     };
 
-    // 2. Focus restoration handler
+    // 2. Instant Window Focus Handler
     const handleFocus = () => {
-      deactivateShield();
-    };
-
-    // 3. Tab visibility changes
-    const handleVisibilityChange = () => {
-      if (document.hidden) {
-        activateShield("blur");
-      } else if (document.hasFocus()) {
+      if (!isPrintScreenLockedRef.current) {
         deactivateShield();
       }
     };
 
-    // 4. Polling guard to catch screen-snip tools that steal OS focus silently
-    const focusGuardInterval = setInterval(() => {
-      if (typeof document !== "undefined") {
-        if (!document.hasFocus() || document.hidden) {
-          activateShield("blur");
-        }
+    // 3. Tab Visibility Handler
+    const handleVisibilityChange = () => {
+      if (document.hidden) {
+        applyInstantDomLock();
+        activateShield("blur");
+      } else if (document.hasFocus() && !isPrintScreenLockedRef.current) {
+        deactivateShield();
       }
-    }, 180);
+    };
 
-    // 5. Intercept key combinations for screen capture and printing
-    const handleKeyDown = (e: KeyboardEvent) => {
-      // Hardware PrintScreen Key
+    // 4. Mouse Exits Viewport (Blocks clicking Taskbar / Extension screenshot buttons)
+    const handleMouseLeave = (e: MouseEvent) => {
+      if (
+        e.clientY <= 0 ||
+        e.clientX <= 0 ||
+        e.clientX >= window.innerWidth ||
+        e.clientY >= window.innerHeight
+      ) {
+        applyInstantDomLock();
+        activateShield("blur");
+      }
+    };
+
+    // 5. Mouse Moves Inside Viewport (Restores view if window is focused)
+    const handleMouseMove = () => {
+      if (
+        !isPrintScreenLockedRef.current &&
+        document.hasFocus() &&
+        !document.hidden
+      ) {
+        removeInstantDomLock();
+        if (isShielded) setIsShielded(false);
+      }
+    };
+
+    // 6. Zero-Delay Hardware Keydown Listener at Capture Phase (runs before OS snip)
+    const handleKeyDownCapture = (e: KeyboardEvent) => {
+      // Hardware PrintScreen Key (PrtScn)
       if (
         e.key === "PrintScreen" ||
         e.code === "PrintScreen" ||
@@ -87,7 +126,9 @@ export function AntiScreenshotShield({
       ) {
         e.preventDefault();
         e.stopPropagation();
+        applyInstantDomLock();
 
+        // Wipe and overwrite clipboard immediately
         if (navigator.clipboard?.writeText) {
           navigator.clipboard
             .writeText(
@@ -96,10 +137,12 @@ export function AntiScreenshotShield({
             .catch(() => {});
         }
 
-        activateShield("printscreen", 5000);
+        activateShield("printscreen", 4000);
+        return;
       }
 
-      // Windows Snipping Tool (Win+Shift+S / Ctrl+Shift+S) & Mac Screenshot (Cmd+Shift+3/4/5)
+      // Windows Snipping Tool (Win+Shift+S / Ctrl+Shift+S) & Mac Screen Snip (Cmd+Shift+3/4/5)
+      // NOTE: Checking Shift + (Meta OR Ctrl) catches the combo immediately when keys go down!
       if (
         (e.ctrlKey || e.metaKey) &&
         e.shiftKey &&
@@ -115,21 +158,25 @@ export function AntiScreenshotShield({
       ) {
         e.preventDefault();
         e.stopPropagation();
-        activateShield("shortcut", 5000);
+        applyInstantDomLock();
+        activateShield("shortcut", 4500);
+        return;
       }
 
-      // Browser Print (Ctrl+P / Cmd+P)
+      // Browser Print shortcut (Ctrl+P / Cmd+P)
       if (
         (e.ctrlKey || e.metaKey) &&
         (e.key === "p" || e.key === "P" || e.code === "KeyP")
       ) {
         e.preventDefault();
         e.stopPropagation();
-        activateShield("shortcut", 3500);
+        applyInstantDomLock();
+        activateShield("shortcut", 3000);
+        return;
       }
     };
 
-    const handleKeyUp = (e: KeyboardEvent) => {
+    const handleKeyUpCapture = (e: KeyboardEvent) => {
       if (
         e.key === "PrintScreen" ||
         e.code === "PrintScreen" ||
@@ -137,66 +184,79 @@ export function AntiScreenshotShield({
         e.which === 44
       ) {
         e.preventDefault();
-        e.stopPropagation();
-
-        if (navigator.clipboard?.writeText) {
-          navigator.clipboard
-            .writeText(
-              "Vitra Document Privacy: Screenshots and screen capture are strictly restricted to protect candidate intellectual property. Please use the official Download PDF or Download DOCX button."
-            )
-            .catch(() => {});
-        }
-
-        activateShield("printscreen", 5000);
+        applyInstantDomLock();
+        activateShield("printscreen", 4000);
       }
     };
 
+    // 7. Polling Guard at 100ms interval for silent OS capture overlays
+    const focusPollingInterval = setInterval(() => {
+      if (typeof document !== "undefined") {
+        if (!document.hasFocus() || document.hidden) {
+          applyInstantDomLock();
+          if (!isShielded) activateShield("blur");
+        }
+      }
+    }, 100);
+
+    // Register capture-phase listeners (highest priority in browser event queue)
     window.addEventListener("blur", handleBlur, true);
     window.addEventListener("focus", handleFocus, true);
     document.addEventListener("visibilitychange", handleVisibilityChange, true);
-    window.addEventListener("keydown", handleKeyDown, true);
-    window.addEventListener("keyup", handleKeyUp, true);
-    document.addEventListener("keydown", handleKeyDown, true);
-    document.addEventListener("keyup", handleKeyUp, true);
+    document.documentElement.addEventListener("mouseleave", handleMouseLeave, true);
+    window.addEventListener("mousemove", handleMouseMove, { passive: true });
+    window.addEventListener("keydown", handleKeyDownCapture, { capture: true, passive: false });
+    window.addEventListener("keyup", handleKeyUpCapture, { capture: true, passive: false });
+    document.addEventListener("keydown", handleKeyDownCapture, { capture: true, passive: false });
 
     return () => {
       window.removeEventListener("blur", handleBlur, true);
       window.removeEventListener("focus", handleFocus, true);
       document.removeEventListener("visibilitychange", handleVisibilityChange, true);
-      window.removeEventListener("keydown", handleKeyDown, true);
-      window.removeEventListener("keyup", handleKeyUp, true);
-      document.removeEventListener("keydown", handleKeyDown, true);
-      document.removeEventListener("keyup", handleKeyUp, true);
-      clearInterval(focusGuardInterval);
-      if (timeoutRef.current) clearTimeout(timeoutRef.current);
+      document.documentElement.removeEventListener("mouseleave", handleMouseLeave, true);
+      window.removeEventListener("mousemove", handleMouseMove);
+      window.removeEventListener("keydown", handleKeyDownCapture, true);
+      window.removeEventListener("keyup", handleKeyUpCapture, true);
+      document.removeEventListener("keydown", handleKeyDownCapture, true);
+      clearInterval(focusPollingInterval);
+      if (unlockTimerRef.current) clearTimeout(unlockTimerRef.current);
+      if (typeof document !== "undefined") {
+        document.documentElement.classList.remove("vitra-screen-lock-instant");
+      }
     };
-  }, [enabled, activateShield, deactivateShield]);
+  }, [
+    enabled,
+    applyInstantDomLock,
+    removeInstantDomLock,
+    activateShield,
+    deactivateShield,
+    isShielded,
+  ]);
 
   return (
     <div
-      ref={containerRef}
       className={cn("relative select-none", className)}
       onContextMenu={(e) => {
-        // Block right-click context menu (blocks browser "Web Capture", "Take Screenshot", etc.)
+        // Blocks right-click context menu (blocks browser "Web Capture", "Take Screenshot", etc.)
         e.preventDefault();
       }}
       onCopy={(e) => e.preventDefault()}
       onCut={(e) => e.preventDefault()}
       onDragStart={(e) => e.preventDefault()}
     >
-      {/* Target Content with deep blur filter when shielded */}
+      {/* Content wrapper with immediate 0ms blur/cutout */}
       <div
         className={cn(
-          "transition-all duration-150 ease-out",
           isShielded &&
-            "pointer-events-none filter blur-[40px] grayscale contrast-50 opacity-0 select-none"
+            "pointer-events-none filter blur-[50px] grayscale contrast-50 opacity-0 select-none"
         )}
         style={
           isShielded
             ? {
-                WebkitFilter: "blur(40px) grayscale(100%) brightness(10%)",
-                filter: "blur(40px) grayscale(100%) brightness(10%)",
+                WebkitFilter: "blur(50px) grayscale(100%) brightness(0%)",
+                filter: "blur(50px) grayscale(100%) brightness(0%)",
                 opacity: 0,
+                visibility: "hidden",
                 pointerEvents: "none",
                 userSelect: "none",
               }
@@ -212,7 +272,7 @@ export function AntiScreenshotShield({
           role="alert"
           aria-live="assertive"
           onClick={deactivateShield}
-          className="fixed inset-0 z-[99999] flex flex-col items-center justify-center bg-[#141722]/98 backdrop-blur-xl p-6 text-center select-none cursor-pointer"
+          className="fixed inset-0 z-[2147483646] flex flex-col items-center justify-center bg-[#0E121B]/98 backdrop-blur-2xl p-6 text-center select-none cursor-pointer"
         >
           <div className="max-w-md rounded-2xl border-2 border-black dark:border-[#333C52] bg-white dark:bg-[#1E2333] p-6 sm:p-8 shadow-sticker flex flex-col items-center">
             <div className="inline-flex h-14 w-14 items-center justify-center rounded-2xl border-2 border-black dark:border-[#333C52] bg-[#FEF3C7] dark:bg-[#252210] text-[#92400E] dark:text-[#FBBF24] mb-4">
@@ -229,7 +289,7 @@ export function AntiScreenshotShield({
                 ? "Screenshot Disabled"
                 : shieldReason === "shortcut"
                   ? "Screen Capture Restricted"
-                  : "Workspace Temporarily Hidden"}
+                  : "Workspace Protected"}
             </h3>
 
             <p className="mt-2 text-xs font-tech text-[#55564E] dark:text-[#CBD5E1] leading-relaxed">
@@ -237,7 +297,7 @@ export function AntiScreenshotShield({
                 ? "Direct screenshots of CV documents and candidate forms are disabled to protect candidate data and intellectual property. Please use the official Download PDF or Download DOCX buttons."
                 : shieldReason === "shortcut"
                   ? "Screen capture shortcuts and browser printing are restricted. Official clean documents can be exported using the buttons at the top of your workspace."
-                  : "The CV editor and live document preview are automatically shielded while your browser window is out of focus to prevent background screen recorders and external snip utilities."}
+                  : "The CV editor and document preview are shielded to prevent background screen grabbers and snipping utilities from capturing your data."}
             </p>
 
             <button

@@ -287,6 +287,50 @@ body {
   user-drag: none !important;
 }
 
+/* ==============================================================
+   ZERO-LATENCY HARDWARE COMPOSITOR SCREEN-LOCK (0ms Reaction)
+   ============================================================== */
+html.vitra-screen-lock-instant,
+html.vitra-screen-lock-instant body {
+  overflow: hidden !important;
+}
+
+html.vitra-screen-lock-instant .cv-document-sheet,
+html.vitra-screen-lock-instant [data-protected-cv],
+html.vitra-screen-lock-instant .vitra-cv-workspace,
+html.vitra-screen-lock-instant input,
+html.vitra-screen-lock-instant textarea,
+html.vitra-screen-lock-instant select,
+html.vitra-screen-lock-instant button,
+html.vitra-screen-lock-instant form {
+  filter: blur(60px) grayscale(100%) brightness(0%) !important;
+  opacity: 0 !important;
+  visibility: hidden !important;
+  transition: none !important;
+  pointer-events: none !important;
+  user-select: none !important;
+}
+
+html.vitra-screen-lock-instant::after {
+  content: "🔒 VITRA SECURITY SHIELD ACTIVE · SCREENSHOTS & SCREEN CAPTURE RESTRICTED · CLICK WINDOW TO RESUME" !important;
+  position: fixed !important;
+  inset: 0 !important;
+  z-index: 2147483647 !important;
+  background-color: #0E121B !important;
+  color: #FFFFFF !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  font-family: Calibri, 'Segoe UI', sans-serif !important;
+  font-size: 20px !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.05em !important;
+  text-align: center !important;
+  padding: 30px !important;
+  line-height: 1.5 !important;
+  box-shadow: inset 0 0 100px rgba(0, 0, 0, 0.9) !important;
+}
+
 img,
 canvas {
   -webkit-user-drag: none;
