@@ -26,6 +26,7 @@ import { Button } from "@/components/ui/button";
 import { FieldLabel, Input, Select, Textarea } from "@/components/ui/input";
 import { CommaSeparatedInput } from "@/components/ui/comma-separated-input";
 import { CvDocumentPreview } from "@/components/templates/CvDocumentPreview";
+import { AntiScreenshotShield } from "@/components/security/AntiScreenshotShield";
 import { SubscriptionRequiredModal } from "@/components/billing/SubscriptionRequiredModal";
 import {
   NIGERIAN_AND_INTL_QUALIFICATIONS,
@@ -2609,20 +2610,22 @@ export function CvEditorWorkspace({
                 </Button>
               </div>
             </div>
-            <div className="overflow-x-auto">
-              <div
-                style={{
-                  transform: `scale(${previewScale / 100})`,
-                  transformOrigin: "top center",
-                }}
-              >
-                <CvDocumentPreview
-                  cv={cv.structuredContent}
-                  templateId={cv.templateId}
-                  settings={cv.settings}
-                />
+            <AntiScreenshotShield documentTitle={cv.title}>
+              <div className="overflow-x-auto">
+                <div
+                  style={{
+                    transform: `scale(${previewScale / 100})`,
+                    transformOrigin: "top center",
+                  }}
+                >
+                  <CvDocumentPreview
+                    cv={cv.structuredContent}
+                    templateId={cv.templateId}
+                    settings={cv.settings}
+                  />
+                </div>
               </div>
-            </div>
+            </AntiScreenshotShield>
           </div>
         </div>
       </div>

@@ -16,6 +16,7 @@ import { Button } from "@/components/ui/button";
 import { FieldLabel, Input, Select, Textarea } from "@/components/ui/input";
 import { CommaSeparatedInput } from "@/components/ui/comma-separated-input";
 import { CvDocumentPreview } from "@/components/templates/CvDocumentPreview";
+import { AntiScreenshotShield } from "@/components/security/AntiScreenshotShield";
 import {
   CAREER_PROFILES,
   NIGERIAN_AND_INTL_QUALIFICATIONS,
@@ -2518,14 +2519,16 @@ export function CvWizard({ initialStep = "profile" }: { initialStep?: WizardStep
                 })}
               </div>
             </div>
-            <div className="overflow-y-auto p-4 sm:p-6">
-              <CvDocumentPreview
-                cv={previewCv}
-                templateId={templateId}
-                settings={settings}
-                showProgressPlaceholders={true}
-              />
-            </div>
+            <AntiScreenshotShield documentTitle="Candidate CV">
+              <div className="overflow-y-auto p-4 sm:p-6">
+                <CvDocumentPreview
+                  cv={previewCv}
+                  templateId={templateId}
+                  settings={settings}
+                  showProgressPlaceholders={true}
+                />
+              </div>
+            </AntiScreenshotShield>
           </div>
         </div>
       )}
