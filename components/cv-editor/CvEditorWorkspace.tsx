@@ -511,7 +511,8 @@ export function CvEditorWorkspace({
   }
 
   return (
-    <div className="mx-auto max-w-[1400px] space-y-4">
+    <AntiScreenshotShield documentTitle={cv.title}>
+      <div className="mx-auto max-w-[1400px] space-y-4">
       {/* Top Toolbar */}
       <div className="flex flex-col gap-3 rounded-xl border border-[#E2DDD2] bg-[#FFFEFA] p-3.5 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex flex-wrap items-center gap-3 min-w-0">
@@ -2637,5 +2638,6 @@ export function CvEditorWorkspace({
         format={requestedExportFormat}
       />
     </div>
-  );
+  </AntiScreenshotShield>
+);
 }

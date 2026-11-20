@@ -628,7 +628,8 @@ export function CvWizard({ initialStep = "profile" }: { initialStep?: WizardStep
   }
 
   return (
-    <div className="mx-auto max-w-4xl space-y-6">
+    <AntiScreenshotShield documentTitle="Candidate CV">
+      <div className="mx-auto max-w-4xl space-y-6">
       {/* Top Progress Bar & Save Indicator */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
@@ -2533,5 +2534,6 @@ export function CvWizard({ initialStep = "profile" }: { initialStep?: WizardStep
         </div>
       )}
     </div>
-  );
+  </AntiScreenshotShield>
+);
 }
