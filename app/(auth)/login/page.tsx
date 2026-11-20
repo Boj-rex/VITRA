@@ -3,8 +3,9 @@
 import React, { Suspense, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Eye, EyeOff, ShieldCheck, ArrowLeft, RefreshCw, KeyRound } from "lucide-react";
+import { Eye, EyeOff, ShieldCheck, RefreshCw, KeyRound } from "lucide-react";
 import { FieldLabel, Input } from "@/components/ui/input";
+import { LoginLoadingScreen } from "@/components/auth/LoginLoadingScreen";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
 
@@ -13,6 +14,13 @@ function LoginFormInner() {
   const searchParams = useSearchParams();
   const nextPath = searchParams.get("next") || "/dashboard";
   const urlError = searchParams.get("error");
+
+  // Loading Screen & Zoom Transition State
+  const [loadingScreen, setLoadingScreen] = useState({ active: false, zooming: false });
+
+  const handleTransitionComplete = () => {
+    window.location.href = nextPath.startsWith("/") ? nextPath : "/dashboard";
+  };
 
   // Step 1: Credentials State
   const [step, setStep] = useState<"credentials" | "otp">("credentials");
@@ -62,6 +70,7 @@ function LoginFormInner() {
     e.preventDefault();
     setError(null);
     setLoading(true);
+    setLoadingScreen({ active: true, zooming: false });
     try {
       const res = await fetch("/api/auth/login", {
         method: "POST",
@@ -71,6 +80,7 @@ function LoginFormInner() {
       const data = await res.json();
       if (!res.ok) {
         setError(data.error || "Invalid email or password.");
+        setLoadingScreen({ active: false, zooming: false });
         return;
       }
 
@@ -83,14 +93,15 @@ function LoginFormInner() {
         setResendCooldown(60);
         setResendSuccess(null);
         setStep("otp");
+        setLoadingScreen({ active: false, zooming: false });
         return;
       }
 
-      // Direct login path
-      router.push(nextPath.startsWith("/") ? nextPath : "/dashboard");
-      router.refresh();
+      // Direct login path - initiate zoom into dashboard
+      setLoadingScreen({ active: true, zooming: true });
     } catch {
       setError("Network error while logging in.");
+      setLoadingScreen({ active: false, zooming: false });
     } finally {
       setLoading(false);
     }
@@ -172,6 +183,7 @@ function LoginFormInner() {
 
     setOtpError(null);
     setOtpLoading(true);
+    setLoadingScreen({ active: true, zooming: false });
 
     try {
       const res = await fetch("/api/auth/verify-otp", {
@@ -183,14 +195,15 @@ function LoginFormInner() {
 
       if (!res.ok) {
         setOtpError(data.error || "Invalid security code. Please try again.");
+        setLoadingScreen({ active: false, zooming: false });
         return;
       }
 
-      // Success! Session cookie set by server
-      router.push(nextPath.startsWith("/") ? nextPath : "/dashboard");
-      router.refresh();
+      // Success! Session cookie set by server - initiate zoom into dashboard
+      setLoadingScreen({ active: true, zooming: true });
     } catch {
       setOtpError("Network error while verifying security code.");
+      setLoadingScreen({ active: false, zooming: false });
     } finally {
       setOtpLoading(false);
     }
@@ -254,8 +267,14 @@ function LoginFormInner() {
     const isCodeComplete = otpDigits.join("").length === 6 && !otpDigits.includes("");
 
     return (
-      <div className="animate-in fade-in slide-in-from-bottom-2 duration-300">
-        <div className="space-y-1 text-center sm:text-left">
+      <>
+        <LoginLoadingScreen
+          active={loadingScreen.active}
+          isZooming={loadingScreen.zooming}
+          onTransitionComplete={handleTransitionComplete}
+        />
+        <div className="animate-in fade-in slide-in-from-bottom-2 duration-300">
+          <div className="space-y-1 text-center sm:text-left">
           <div className="inline-flex items-center gap-1.5 rounded-full border border-[#10B981] bg-[#10B981]/10 px-2.5 py-0.5 font-tech text-[11px] font-bold text-[#065F46] dark:text-[#34D399]">
             <ShieldCheck className="h-3.5 w-3.5" />
             <span>EMAIL OTP SECURITY LAYER</span>
@@ -370,15 +389,22 @@ function LoginFormInner() {
           </button>
         </div>
       </div>
-    );
-  }
+    </>
+  );
+}
 
   // --------------------------------------------------------------------------
   // STEP 1: CREDENTIALS VIEW
   // --------------------------------------------------------------------------
   return (
-    <div>
-      <div className="space-y-1 text-center sm:text-left">
+    <>
+      <LoginLoadingScreen
+        active={loadingScreen.active}
+        isZooming={loadingScreen.zooming}
+        onTransitionComplete={handleTransitionComplete}
+      />
+      <div>
+        <div className="space-y-1 text-center sm:text-left">
         <span className="font-tech text-xs font-bold text-[#1845E8] uppercase tracking-wider">
           ● CANDIDATE ACCESS
         </span>
@@ -475,6 +501,7 @@ function LoginFormInner() {
         </Link>
       </p>
     </div>
+    </>
   );
 }
 
