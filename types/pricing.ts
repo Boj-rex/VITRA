@@ -31,7 +31,6 @@ export const PRICING_PLANS: PricingPlan[] = [
       "Gemini AI writing assistant & polish tools",
       "Unlimited PDF and Word (.docx) downloads",
       "Real-time ATS structural readability checks",
-      "Built-in screenshot & document privacy protection",
     ],
   },
   {
@@ -53,7 +52,6 @@ export const PRICING_PLANS: PricingPlan[] = [
       "Job description keyword matching & gap analysis",
       "Unlimited PDF & Word (.docx) downloads",
       "Snapshot version history per CV",
-      "Built-in screenshot & document privacy protection",
     ],
   },
   {
@@ -74,7 +72,6 @@ export const PRICING_PLANS: PricingPlan[] = [
       "Full job-tailoring keyword analysis",
       "Unlimited PDF & Word (.docx) downloads",
       "Complete snapshot version history & CV duplication",
-      "Built-in screenshot & document privacy protection",
     ],
   },
 ];

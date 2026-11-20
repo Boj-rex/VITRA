@@ -21,8 +21,6 @@
    - All templates export to clean vector PDF (with clickable links and searchable text) and fully editable Microsoft Word (.docx).
 4. **Anti-Fabrication & Ethical Career Storytelling:**
    - Vitra never invents fake employers, exaggerated metrics, or artificial degrees. AI guidance is strictly grounded in candidate-provided facts.
-5. **Screen Capture & Privacy Protection:**
-   - Integrated client-side privacy safeguards to protect candidate intellectual property from background recorders and automated screen scrapers.
 
 ## Pricing & Plan Structure (Nigerian Naira)
 - **Starter Package:** ₦6,000 one-time fee · 2 distinct CVs · All 4 ATS core templates · AI writing assistance · Unlimited PDF & Word exports.

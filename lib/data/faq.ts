@@ -10,11 +10,6 @@ export const FAQ_ITEMS: FaqItem[] = [
       "Vitra offers transparent, value-based packages: 2 CVs attract a fee of ₦6,000; anything above 2 up to 6 CVs attracts a fee of ₦15,000; and anything above 6 up to 13 CVs attracts a fee of ₦20,000 (with 13 CVs being the maximum allowance). Every package includes all 4 ATS-conscious templates, Gemini AI writing assistance, job tailoring, and unlimited PDF & Word (.docx) downloads.",
   },
   {
-    question: "Why is screen capture restricted on the website?",
-    answer:
-      "Vitra incorporates built-in anti-screenshot and browser print protection to safeguard your personal career details and intellectual property from unauthorized screen grabs, background recorders, and automated scrapers. Official documents are cleanly exported using the secure Download PDF and Download DOCX features.",
-  },
-  {
     question: "Can I create a strong CV if I have never held a formal job?",
     answer:
       "Yes. Vitra includes a dedicated No-Experience pathway designed for students, recent graduates, NYSC corps members, SIWES trainees, and first-time job seekers. You can highlight academic projects, volunteering, practical training, and leadership roles clearly.",

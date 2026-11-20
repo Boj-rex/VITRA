@@ -96,19 +96,7 @@ export default function TermsPage() {
 
           <section className="space-y-2">
             <h2 className="text-base sm:text-lg font-bold text-[#111111] dark:text-white flex items-center gap-2">
-              <span className="font-pixel text-xs bg-[#EC4899] text-white px-2 py-0.5 rounded border border-black dark:border-[#333C52]">03</span>
-              <span>Screen Capture Restrictions &amp; Protection</span>
-            </h2>
-            <p className="text-[#55564E] dark:text-[#CBD5E1]">
-              To protect the commercial integrity of the platform and customer document security, screen
-              captures, screenshots, and unauthorized browser printing are strictly disabled. Legitimate
-              document delivery occurs exclusively through the official PDF and DOCX export channels.
-            </p>
-          </section>
-
-          <section className="space-y-2">
-            <h2 className="text-base sm:text-lg font-bold text-[#111111] dark:text-white flex items-center gap-2">
-              <span className="font-pixel text-xs bg-[#3B82F6] text-white px-2 py-0.5 rounded border border-black dark:border-[#333C52]">04</span>
+              <span className="font-pixel text-xs bg-[#3B82F6] text-white px-2 py-0.5 rounded border border-black dark:border-[#333C52]">03</span>
               <span>No Employment Guarantee</span>
             </h2>
             <p className="text-[#55564E] dark:text-[#CBD5E1]">

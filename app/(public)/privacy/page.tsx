@@ -108,20 +108,7 @@ export default function PrivacyPage() {
 
           <section className="space-y-2">
             <h2 className="text-base sm:text-lg font-bold text-[#111111] dark:text-white flex items-center gap-2">
-              <span className="font-pixel text-xs bg-[#3B82F6] text-white px-2 py-0.5 rounded border border-black dark:border-[#333C52]">04</span>
-              <span>Screen Capture &amp; Security Protections</span>
-            </h2>
-            <p className="text-[#55564E] dark:text-[#CBD5E1]">
-              To safeguard confidential employment history, client contact records, and intellectual
-              property, Vitra enforces client-side screen capture guards, blur-on-focus loss, and
-              direct browser print restrictions. Verified files are delivered through our encrypted PDF
-              and DOCX compilation engine.
-            </p>
-          </section>
-
-          <section className="space-y-2">
-            <h2 className="text-base sm:text-lg font-bold text-[#111111] dark:text-white flex items-center gap-2">
-              <span className="font-pixel text-xs bg-[#F8D849] text-black px-2 py-0.5 rounded border border-black dark:border-[#333C52]">05</span>
+              <span className="font-pixel text-xs bg-[#F8D849] text-black px-2 py-0.5 rounded border border-black dark:border-[#333C52]">04</span>
               <span>Your Right to Deletion (Data Portability)</span>
             </h2>
             <p className="text-[#55564E] dark:text-[#CBD5E1]">
@@ -133,7 +120,7 @@ export default function PrivacyPage() {
 
           <section className="space-y-3 pt-2 border-t border-black/10 dark:border-white/10">
             <h2 className="text-base sm:text-lg font-bold text-[#111111] dark:text-white flex items-center gap-2">
-              <span className="font-pixel text-xs bg-[#10B981] text-black px-2 py-0.5 rounded border border-black dark:border-[#333C52]">06</span>
+              <span className="font-pixel text-xs bg-[#10B981] text-black px-2 py-0.5 rounded border border-black dark:border-[#333C52]">05</span>
               <span>Cookies &amp; Local Storage Transparency</span>
             </h2>
             <p className="text-[#55564E] dark:text-[#CBD5E1]">

@@ -1,7 +1,6 @@
 import React, { useMemo } from "react";
 import type { CvEditorSettings, SectionKey, StructuredCvContent, TemplateId } from "@/types/cv";
 import { cn } from "@/lib/utils";
-import { SecurityWatermark } from "@/components/security/SecurityWatermark";
 
 interface CvDocumentPreviewProps {
   cv: StructuredCvContent;
@@ -216,12 +215,8 @@ export function CvDocumentPreview({
     <div
       data-keep-white="true"
       data-paper="white"
-      onContextMenu={(e) => e.preventDefault()}
-      onCopy={(e) => e.preventDefault()}
-      onCut={(e) => e.preventDefault()}
-      onDragStart={(e) => e.preventDefault()}
       className={cn(
-        "cv-document-sheet relative overflow-hidden w-full bg-white text-black shadow-sm border border-[#E2DDD2] p-4 sm:p-7 md:p-10 select-none",
+        "cv-document-sheet relative overflow-hidden w-full bg-white text-black shadow-sm border border-[#E2DDD2] p-4 sm:p-7 md:p-10",
         sizeClass,
         className
       )}
@@ -231,7 +226,6 @@ export function CvDocumentPreview({
         color: "#111111",
       }}
     >
-      <SecurityWatermark text="VITRA SECURE · DO NOT SCREENSHOT · EXPORT FOR CLEAN COPY" />
       {/* Header */}
       <header className={cn("pb-3", isCentered ? "text-center" : "text-left")}>
         <h1

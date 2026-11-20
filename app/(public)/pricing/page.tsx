@@ -225,10 +225,9 @@ export default function PricingPage() {
         </div>
 
         <p className="text-xs text-[#77786F] dark:text-[#94A3B8] pt-2 border-t border-black/10 dark:border-white/10">
-          <span className="font-bold text-[#111111] dark:text-white">Notice:</span> Built-in screen capture and
-          screenshot protection is active across Vitra to protect document privacy. Verified
+          <span className="font-bold text-[#111111] dark:text-white">Notice:</span> Verified
           downloads are delivered directly as pristine, high-resolution PDF and Microsoft Word
-          (.docx) documents.
+          (.docx) documents ready for job applications.
         </p>
       </section>
     </div>

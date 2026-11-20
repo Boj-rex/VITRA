@@ -16,7 +16,6 @@ import { Button } from "@/components/ui/button";
 import { FieldLabel, Input, Select, Textarea } from "@/components/ui/input";
 import { CommaSeparatedInput } from "@/components/ui/comma-separated-input";
 import { CvDocumentPreview } from "@/components/templates/CvDocumentPreview";
-import { AntiScreenshotShield } from "@/components/security/AntiScreenshotShield";
 import {
   CAREER_PROFILES,
   NIGERIAN_AND_INTL_QUALIFICATIONS,
@@ -628,8 +627,7 @@ export function CvWizard({ initialStep = "profile" }: { initialStep?: WizardStep
   }
 
   return (
-    <AntiScreenshotShield documentTitle="Candidate CV">
-      <div className="mx-auto max-w-4xl space-y-6">
+    <div className="mx-auto max-w-4xl space-y-6">
       {/* Top Progress Bar & Save Indicator */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
@@ -2520,20 +2518,17 @@ export function CvWizard({ initialStep = "profile" }: { initialStep?: WizardStep
                 })}
               </div>
             </div>
-            <AntiScreenshotShield documentTitle="Candidate CV">
-              <div className="overflow-y-auto p-4 sm:p-6">
-                <CvDocumentPreview
-                  cv={previewCv}
-                  templateId={templateId}
-                  settings={settings}
-                  showProgressPlaceholders={true}
-                />
-              </div>
-            </AntiScreenshotShield>
+            <div className="overflow-y-auto p-4 sm:p-6">
+              <CvDocumentPreview
+                cv={previewCv}
+                templateId={templateId}
+                settings={settings}
+                showProgressPlaceholders={true}
+              />
+            </div>
           </div>
         </div>
       )}
     </div>
-  </AntiScreenshotShield>
-);
+  );
 }

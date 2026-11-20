@@ -269,66 +269,12 @@ body {
   letter-spacing: -0.01em;
 }
 
-/* Anti-Screenshot & Screen Capture Protection */
 .prevent-select,
-.select-none,
-.cv-document-sheet {
-  -webkit-user-select: none !important;
-  -moz-user-select: none !important;
-  -ms-user-select: none !important;
-  user-select: none !important;
-  -webkit-touch-callout: none !important;
-}
-
-.cv-document-sheet img,
-.cv-document-sheet canvas {
-  pointer-events: none !important;
-  -webkit-user-drag: none !important;
-  user-drag: none !important;
-}
-
-/* ==============================================================
-   ZERO-LATENCY HARDWARE COMPOSITOR SCREEN-LOCK (0ms Reaction)
-   ============================================================== */
-html.vitra-screen-lock-instant,
-html.vitra-screen-lock-instant body {
-  overflow: hidden !important;
-}
-
-html.vitra-screen-lock-instant .cv-document-sheet,
-html.vitra-screen-lock-instant [data-protected-cv],
-html.vitra-screen-lock-instant .vitra-cv-workspace,
-html.vitra-screen-lock-instant input,
-html.vitra-screen-lock-instant textarea,
-html.vitra-screen-lock-instant select,
-html.vitra-screen-lock-instant button,
-html.vitra-screen-lock-instant form {
-  filter: blur(60px) grayscale(100%) brightness(0%) !important;
-  opacity: 0 !important;
-  visibility: hidden !important;
-  transition: none !important;
-  pointer-events: none !important;
-  user-select: none !important;
-}
-
-html.vitra-screen-lock-instant::after {
-  content: "🔒 VITRA SECURITY SHIELD ACTIVE · SCREENSHOTS & SCREEN CAPTURE RESTRICTED · CLICK WINDOW TO RESUME" !important;
-  position: fixed !important;
-  inset: 0 !important;
-  z-index: 2147483647 !important;
-  background-color: #0E121B !important;
-  color: #FFFFFF !important;
-  display: flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  font-family: Calibri, 'Segoe UI', sans-serif !important;
-  font-size: 20px !important;
-  font-weight: 700 !important;
-  letter-spacing: 0.05em !important;
-  text-align: center !important;
-  padding: 30px !important;
-  line-height: 1.5 !important;
-  box-shadow: inset 0 0 100px rgba(0, 0, 0, 0.9) !important;
+.select-none {
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
 }
 
 img,
@@ -1085,14 +1031,14 @@ body.dark [data-clipboard-paper] .border-\[\#E5E0D5\],
 
 @media print {
 
-  /* Obfuscate and block unauthorized browser prints / print-screen captures */
+  /* Clean print redirection to official PDF/DOCX downloads */
   body * {
     visibility: hidden !important;
   }
 
   body::before {
     visibility: visible !important;
-    content: "Screen capture and direct browser printing are restricted on Vitra to protect intellectual property and document privacy. Please use the official 'Download PDF' button inside your workspace to generate authentic documents.";
+    content: "Direct browser printing is not supported. Please use the official 'Download PDF' or 'Download DOCX' button inside your workspace to generate high-resolution documents.";
     display: block;
     position: fixed;
     top: 35%;
