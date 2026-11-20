@@ -1,5 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import Script from "next/script";
+import { Analytics } from "@vercel/analytics/next";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 import { CookieConsentBanner } from "@/components/legal/CookieConsentBanner";
 import { FloatingSupportWidget } from "@/components/support/FloatingSupportWidget";
 import { RootStructuredData } from "@/components/seo/JsonLd";
@@ -159,6 +161,8 @@ export default function RootLayout({
         {children}
         <CookieConsentBanner />
         <FloatingSupportWidget />
+        <Analytics />
+        <SpeedInsights />
       </body>
     </html>
   );
