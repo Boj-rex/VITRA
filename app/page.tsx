@@ -16,13 +16,28 @@ import { FlyingClipboard3D } from "@/components/3d/FlyingClipboard3D";
 import { HeroShowcase } from "@/components/public/HeroShowcase";
 import { FaqAccordion } from "@/components/public/FaqAccordion";
 import { PRICING_PLANS } from "@/types/pricing";
+import { HomePageStructuredData } from "@/components/seo/JsonLd";
 import { getAuthenticatedUser } from "@/lib/auth/session";
 import { cn } from "@/lib/utils";
 
 export const metadata = {
-  title: "Vitra — ATS CV Builder Tailored for Nigerian & Global Careers",
+  title: "Vitra — #1 ATS CV Builder in Nigeria | Create Professional CVs Online",
   description:
-    "Build job-winning, ATS-compliant CVs tailored for Nigerian roles, NYSC graduates, and global remote opportunities. Includes 9 modern & scrapbook templates, ethical Gemini AI writing, and instant PDF/DOCX downloads.",
+    "Create job-winning, ATS-compliant CVs online in 5 minutes with Vitra. Tailored for Nigerian professionals, NYSC graduates, and global remote opportunities. Includes 9 ATS templates, ethical Gemini AI writing, and instant PDF & Word (.docx) downloads.",
+  keywords: [
+    "CV builder",
+    "CV maker",
+    "create CV online",
+    "CV builder Nigeria",
+    "ATS resume builder",
+    "free CV maker online",
+    "best CV builder in Nigeria",
+    "NYSC CV format",
+    "Nigerian graduate CV template",
+    "curriculum vitae builder",
+    "download CV Word docx Nigeria",
+    "PDF CV maker Lagos",
+  ],
   alternates: {
     canonical: "/",
   },
@@ -35,6 +50,8 @@ export default async function HomePage() {
 
   return (
     <div className="bg-drafting-grid min-h-screen pt-20 sm:pt-24 pb-16 sm:pb-12 px-2 sm:px-4 md:px-8 flex flex-col items-center relative overflow-x-clip">
+      {/* Schema.org Rich Snippets for Google (FAQPage + HowTo) */}
+      <HomePageStructuredData />
       {/* Top Fixed Sticky Navigation Bar */}
       <ScrapbookNavbar isAuthenticated={Boolean(user)} />
 

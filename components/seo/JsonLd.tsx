@@ -1,5 +1,6 @@
 import React from "react";
 import { getSiteUrl } from "@/lib/config/site";
+import { FAQ_ITEMS } from "@/lib/data/faq";
 
 export interface JsonLdProps {
   data: Record<string, unknown>;
@@ -162,4 +163,71 @@ export function BreadcrumbStructuredData({ items }: { items: BreadcrumbItem[] })
   };
 
   return <JsonLd data={schema} />;
+}
+
+export function HomePageStructuredData() {
+  const faqSchema = {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: (FAQ_ITEMS || []).slice(0, 10).map((item) => ({
+      "@type": "Question",
+      name: item.question,
+      acceptedAnswer: {
+        "@type": "Answer",
+        text: item.answer,
+      },
+    })),
+  };
+
+  const howToSchema = {
+    "@context": "https://schema.org",
+    "@type": "HowTo",
+    name: "How to Create an ATS-Compliant CV Online in 5 Minutes",
+    description:
+      "A step-by-step guide to building an ATS-friendly CV that passes applicant tracking systems for Nigerian and global remote jobs.",
+    image: `${BASE_URL}/opengraph-image`,
+    totalTime: "PT5M",
+    estimatedCost: {
+      "@type": "MonetaryAmount",
+      currency: "NGN",
+      value: "6000",
+    },
+    step: [
+      {
+        "@type": "HowToStep",
+        position: 1,
+        name: "Choose an ATS-Friendly CV Template",
+        text: "Select from 9 ATS-tested templates (Corporate Executive, Modern Minimal, Classic Professional, or Ivy League) designed with single-column flow and standard fonts.",
+        url: `${BASE_URL}/templates`,
+      },
+      {
+        "@type": "HowToStep",
+        position: 2,
+        name: "Input Career Details, Education & NYSC Service",
+        text: "Add your work experience, education (SSCE, BSc, HND, ND, MSc), and NYSC service without fabricating missing credentials.",
+        url: `${BASE_URL}/create`,
+      },
+      {
+        "@type": "HowToStep",
+        position: 3,
+        name: "Run the Real-Time ATS Keyword & Format Audit",
+        text: "Use Vitra's deterministic ATS engine to verify contact formats, bullet structure, action verbs, and keyword density against your target role.",
+        url: `${BASE_URL}/create/skills`,
+      },
+      {
+        "@type": "HowToStep",
+        position: 4,
+        name: "Download PDF and Editable Word (.docx)",
+        text: "Export high-resolution vector PDF and editable Microsoft Word documents synchronized with applicant tracking system standards.",
+        url: `${BASE_URL}/templates`,
+      },
+    ],
+  };
+
+  return (
+    <>
+      <JsonLd data={faqSchema} />
+      <JsonLd data={howToSchema} />
+    </>
+  );
 }

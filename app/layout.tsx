@@ -22,13 +22,18 @@ export const viewport: Viewport = {
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
   title: {
-    default: "Vitra — Thoughtful, ATS-Friendly CV Builder & Career Studio",
-    template: "%s | Vitra Career Studio",
+    default: "Vitra — #1 ATS CV Builder in Nigeria & Online Career Studio",
+    template: "%s | Vitra ATS CV Studio",
   },
   description:
     "Craft ATS-compliant CVs tailored for Nigerian professionals, NYSC graduates, and global remote opportunities. Features 9 modern & scrapbook templates, Gemini AI writing assistance, deterministic ATS scoring, and instant PDF/DOCX downloads.",
   keywords: [
-    "ATS CV builder Nigeria",
+    "CV builder",
+    "CV maker",
+    "create CV online",
+    "CV builder Nigeria",
+    "ATS CV maker",
+    "free CV maker Nigeria",
     "ATS resume builder",
     "NYSC CV format",
     "Nigerian graduate CV template",
