@@ -3,9 +3,8 @@
 import React, { Suspense, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Eye, EyeOff, ShieldCheck, RefreshCw, KeyRound } from "lucide-react";
+import { Eye, EyeOff, ShieldCheck, ArrowLeft, RefreshCw, KeyRound } from "lucide-react";
 import { FieldLabel, Input } from "@/components/ui/input";
-import { LoginLoadingScreen } from "@/components/auth/LoginLoadingScreen";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
 
@@ -14,13 +13,6 @@ function LoginFormInner() {
   const searchParams = useSearchParams();
   const nextPath = searchParams.get("next") || "/dashboard";
   const urlError = searchParams.get("error");
-
-  // Loading Screen & Zoom Transition State
-  const [loadingScreen, setLoadingScreen] = useState({ active: false, zooming: false });
-
-  const handleTransitionComplete = () => {
-    window.location.href = nextPath.startsWith("/") ? nextPath : "/dashboard";
-  };
 
   // Step 1: Credentials State
   const [step, setStep] = useState<"credentials" | "otp">("credentials");
@@ -70,7 +62,6 @@ function LoginFormInner() {
     e.preventDefault();
     setError(null);
     setLoading(true);
-    setLoadingScreen({ active: true, zooming: false });
     try {
       const res = await fetch("/api/auth/login", {
         method: "POST",
@@ -80,7 +71,6 @@ function LoginFormInner() {
       const data = await res.json();
       if (!res.ok) {
         setError(data.error || "Invalid email or password.");
-        setLoadingScreen({ active: false, zooming: false });
         return;
       }
 
@@ -93,15 +83,14 @@ function LoginFormInner() {
         setResendCooldown(60);
         setResendSuccess(null);
         setStep("otp");
-        setLoadingScreen({ active: false, zooming: false });
         return;
       }
 
-      // Direct login path - initiate zoom into dashboard
-      setLoadingScreen({ active: true, zooming: true });
+      // Direct login path
+      router.push(nextPath.startsWith("/") ? nextPath : "/dashboard");
+      router.refresh();
     } catch {
       setError("Network error while logging in.");
-      setLoadingScreen({ active: false, zooming: false });
     } finally {
       setLoading(false);
     }
@@ -183,7 +172,6 @@ function LoginFormInner() {
 
     setOtpError(null);
     setOtpLoading(true);
-    setLoadingScreen({ active: true, zooming: false });
 
     try {
       const res = await fetch("/api/auth/verify-otp", {
@@ -195,15 +183,14 @@ function LoginFormInner() {
 
       if (!res.ok) {
         setOtpError(data.error || "Invalid security code. Please try again.");
-        setLoadingScreen({ active: false, zooming: false });
         return;
       }
 
-      // Success! Session cookie set by server - initiate zoom into dashboard
-      setLoadingScreen({ active: true, zooming: true });
+      // Success! Session cookie set by server
+      router.push(nextPath.startsWith("/") ? nextPath : "/dashboard");
+      router.refresh();
     } catch {
       setOtpError("Network error while verifying security code.");
-      setLoadingScreen({ active: false, zooming: false });
     } finally {
       setOtpLoading(false);
     }
@@ -267,129 +254,122 @@ function LoginFormInner() {
     const isCodeComplete = otpDigits.join("").length === 6 && !otpDigits.includes("");
 
     return (
-      <>
-        <LoginLoadingScreen
-          active={loadingScreen.active}
-          isZooming={loadingScreen.zooming}
-          onTransitionComplete={handleTransitionComplete}
-        />
-        <div className="animate-in fade-in slide-in-from-bottom-2 duration-300">
-          <div className="space-y-1 text-center sm:text-left">
-            <div className="inline-flex items-center gap-1.5 rounded-full border border-[#10B981] bg-[#10B981]/10 px-2.5 py-0.5 font-tech text-[11px] font-bold text-[#065F46] dark:text-[#34D399]">
-              <ShieldCheck className="h-3.5 w-3.5" />
-              <span>EMAIL OTP SECURITY LAYER</span>
+      <div className="animate-in fade-in slide-in-from-bottom-2 duration-300">
+        <div className="space-y-1 text-center sm:text-left">
+          <div className="inline-flex items-center gap-1.5 rounded-full border border-[#10B981] bg-[#10B981]/10 px-2.5 py-0.5 font-tech text-[11px] font-bold text-[#065F46] dark:text-[#34D399]">
+            <ShieldCheck className="h-3.5 w-3.5" />
+            <span>EMAIL OTP SECURITY LAYER</span>
+          </div>
+          <h1 className="font-tech text-2xl sm:text-3xl font-bold text-[#111111] dark:text-white pt-1">
+            Check Your Email
+          </h1>
+          <p className="text-xs text-[#55564E] dark:text-[#CBD5E1] leading-relaxed">
+            We sent a 6-digit security code to{" "}
+            <strong className="font-mono text-[#111111] dark:text-white font-bold">{maskedEmail}</strong>.
+            Enter it below to sign in.
+          </p>
+        </div>
+
+        {/* 6 Segmented Digit Input Boxes */}
+        <div className="my-6">
+          <div className="flex items-center justify-between gap-1.5 sm:gap-2.5">
+            {otpDigits.map((digit, idx) => (
+              <input
+                key={idx}
+                ref={(el) => {
+                  inputRefs.current[idx] = el;
+                }}
+                type="text"
+                inputMode="numeric"
+                pattern="[0-9]*"
+                maxLength={1}
+                value={digit}
+                onChange={(e) => handleDigitChange(idx, e.target.value)}
+                onKeyDown={(e) => handleDigitKeyDown(idx, e)}
+                onPaste={(e) => {
+                  e.preventDefault();
+                  handlePastedCode(e.clipboardData.getData("text"));
+                }}
+                disabled={otpLoading}
+                className={cn(
+                  "w-10 h-12 sm:w-12 sm:h-14 text-center font-mono text-xl sm:text-2xl font-black rounded-lg border-2 border-black dark:border-[#3A4256] bg-white dark:bg-[#1E2333] text-[#111111] dark:text-white shadow-[2px_2px_0px_#111111] dark:shadow-[2px_2px_0px_#000] focus:border-[#1845E8] focus:ring-2 focus:ring-[#1845E8]/20 focus:outline-none transition-all select-none",
+                  digit ? "bg-[#FEF08A]/30 dark:bg-[#FEF08A]/10 border-[#111111]" : ""
+                )}
+                aria-label={`Security code digit ${idx + 1}`}
+              />
+            ))}
+          </div>
+
+          {/* Feedback Alerts */}
+          {otpError && (
+            <div className="mt-3 rounded-lg border-2 border-red-500 bg-red-50 dark:bg-red-950/40 px-3.5 py-2.5 text-xs font-bold text-red-800 dark:text-red-200">
+              {otpError}
             </div>
-            <h1 className="font-tech text-2xl sm:text-3xl font-bold text-[#111111] dark:text-white pt-1">
-              Check Your Email
-            </h1>
-            <p className="text-xs text-[#55564E] dark:text-[#CBD5E1] leading-relaxed">
-              We sent a 6-digit security code to{" "}
-              <strong className="font-mono text-[#111111] dark:text-white font-bold">{maskedEmail}</strong>.
-              Enter it below to sign in.
+          )}
+
+          {resendSuccess && (
+            <div className="mt-3 rounded-lg border-2 border-emerald-500 bg-emerald-50 dark:bg-emerald-950/40 px-3.5 py-2.5 text-xs font-bold text-emerald-800 dark:text-emerald-200">
+              {resendSuccess}
+            </div>
+          )}
+
+          {/* Delivery Note if Live Email Sent */}
+          {deliveryInfo?.liveSent && (
+            <p className="mt-2 text-center text-[11px] text-[#55564E] dark:text-[#94A3B8]">
+              Security code dispatched via email. Check your inbox and spam folder.
             </p>
-          </div>
+          )}
+        </div>
 
-          {/* 6 Segmented Digit Input Boxes */}
-          <div className="my-6">
-            <div className="flex items-center justify-between gap-1.5 sm:gap-2.5">
-              {otpDigits.map((digit, idx) => (
-                <input
-                  key={idx}
-                  ref={(el) => {
-                    inputRefs.current[idx] = el;
-                  }}
-                  type="text"
-                  inputMode="numeric"
-                  pattern="[0-9]*"
-                  maxLength={1}
-                  value={digit}
-                  onChange={(e) => handleDigitChange(idx, e.target.value)}
-                  onKeyDown={(e) => handleDigitKeyDown(idx, e)}
-                  onPaste={(e) => {
-                    e.preventDefault();
-                    handlePastedCode(e.clipboardData.getData("text"));
-                  }}
-                  disabled={otpLoading}
-                  className={cn(
-                    "w-10 h-12 sm:w-12 sm:h-14 text-center font-mono text-xl sm:text-2xl font-black rounded-lg border-2 border-black dark:border-[#3A4256] bg-white dark:bg-[#1E2333] text-[#111111] dark:text-white shadow-[2px_2px_0px_#111111] dark:shadow-[2px_2px_0px_#000] focus:border-[#1845E8] focus:ring-2 focus:ring-[#1845E8]/20 focus:outline-none transition-all select-none",
-                    digit ? "bg-[#FEF08A]/30 dark:bg-[#FEF08A]/10 border-[#111111]" : ""
-                  )}
-                  aria-label={`Security code digit ${idx + 1}`}
-                />
-              ))}
-            </div>
+        {/* Verify & Sign In Action */}
+        <button
+          type="button"
+          onClick={() => handleVerifyOtp()}
+          disabled={otpLoading || !isCodeComplete}
+          className="w-full inline-flex items-center justify-center gap-2 rounded-xl border-2 border-black dark:border-[#333C52] bg-[#111111] dark:bg-[#1A202C] py-3.5 font-tech text-xs sm:text-sm font-bold text-white shadow-[3px_3px_0px_#1B3AFF] hover:-translate-y-0.5 hover:shadow-[4.5px_4.5px_0px_#1B3AFF] active:translate-x-[2px] active:translate-y-[2px] active:shadow-none active:scale-[0.98] transition-all cursor-pointer disabled:opacity-50 select-none"
+        >
+          {otpLoading ? (
+            <>
+              <RefreshCw className="h-4 w-4 animate-spin" />
+              <span>VERIFYING CODE...</span>
+            </>
+          ) : (
+            <>
+              <KeyRound className="h-4 w-4" />
+              <span>VERIFY & SIGN IN</span>
+            </>
+          )}
+        </button>
 
-            {/* Feedback Alerts */}
-            {otpError && (
-              <div className="mt-3 rounded-lg border-2 border-red-500 bg-red-50 dark:bg-red-950/40 px-3.5 py-2.5 text-xs font-bold text-red-800 dark:text-red-200">
-                {otpError}
-              </div>
-            )}
-
-            {resendSuccess && (
-              <div className="mt-3 rounded-lg border-2 border-emerald-500 bg-emerald-50 dark:bg-emerald-950/40 px-3.5 py-2.5 text-xs font-bold text-emerald-800 dark:text-emerald-200">
-                {resendSuccess}
-              </div>
-            )}
-
-            {/* Delivery Note if Live Email Sent */}
-            {deliveryInfo?.liveSent && (
-              <p className="mt-2 text-center text-[11px] text-[#55564E] dark:text-[#94A3B8]">
-                Security code dispatched via email. Check your inbox and spam folder.
-              </p>
-            )}
-          </div>
-
-          {/* Verify & Sign In Action */}
+        {/* Resend & Back Controls */}
+        <div className="mt-5 flex items-center justify-between text-xs font-tech pt-2 border-t border-black/10 dark:border-white/10">
           <button
             type="button"
-            onClick={() => handleVerifyOtp()}
-            disabled={otpLoading || !isCodeComplete}
-            className="w-full inline-flex items-center justify-center gap-2 rounded-xl border-2 border-black dark:border-[#333C52] bg-[#111111] dark:bg-[#1A202C] py-3.5 font-tech text-xs sm:text-sm font-bold text-white shadow-[3px_3px_0px_#1B3AFF] hover:-translate-y-0.5 hover:shadow-[4.5px_4.5px_0px_#1B3AFF] active:translate-x-[2px] active:translate-y-[2px] active:shadow-none active:scale-[0.98] transition-all cursor-pointer disabled:opacity-50 select-none"
-          >
-            {otpLoading ? (
-              <>
-                <RefreshCw className="h-4 w-4 animate-spin" />
-                <span>VERIFYING CODE...</span>
-              </>
-            ) : (
-              <>
-                <KeyRound className="h-4 w-4" />
-                <span>VERIFY & SIGN IN</span>
-              </>
+            onClick={handleResendOtp}
+            disabled={resendCooldown > 0 || resendLoading}
+            className={cn(
+              "font-bold transition-colors cursor-pointer select-none",
+              resendCooldown > 0 || resendLoading
+                ? "text-[#888880] cursor-not-allowed"
+                : "text-[#1845E8] hover:underline"
             )}
+          >
+            {resendLoading
+              ? "Sending..."
+              : resendCooldown > 0
+                ? `Resend code in ${resendCooldown}s`
+                : "Resend security code"}
           </button>
 
-          {/* Resend & Back Controls */}
-          <div className="mt-5 flex items-center justify-between text-xs font-tech pt-2 border-t border-black/10 dark:border-white/10">
-            <button
-              type="button"
-              onClick={handleResendOtp}
-              disabled={resendCooldown > 0 || resendLoading}
-              className={cn(
-                "font-bold transition-colors cursor-pointer select-none",
-                resendCooldown > 0 || resendLoading
-                  ? "text-[#888880] cursor-not-allowed"
-                  : "text-[#1845E8] hover:underline"
-              )}
-            >
-              {resendLoading
-                ? "Sending..."
-                : resendCooldown > 0
-                  ? `Resend code in ${resendCooldown}s`
-                  : "Resend security code"}
-            </button>
-
-            <button
-              type="button"
-              onClick={handleBackToLogin}
-              className="inline-flex items-center gap-1 text-[#77786F] hover:text-[#111111] dark:hover:text-white transition-colors cursor-pointer select-none"
-            >
-              <span>Use different account</span>
-            </button>
-          </div>
+          <button
+            type="button"
+            onClick={handleBackToLogin}
+            className="inline-flex items-center gap-1 text-[#77786F] hover:text-[#111111] dark:hover:text-white transition-colors cursor-pointer select-none"
+          >
+            <span>Use different account</span>
+          </button>
         </div>
-      </>
+      </div>
     );
   }
 
@@ -397,111 +377,104 @@ function LoginFormInner() {
   // STEP 1: CREDENTIALS VIEW
   // --------------------------------------------------------------------------
   return (
-    <>
-      <LoginLoadingScreen
-        active={loadingScreen.active}
-        isZooming={loadingScreen.zooming}
-        onTransitionComplete={handleTransitionComplete}
-      />
-      <div>
-        <div className="space-y-1 text-center sm:text-left">
-          <span className="font-tech text-xs font-bold text-[#1845E8] uppercase tracking-wider">
-            ● CANDIDATE ACCESS
-          </span>
-          <h1 className="font-tech text-2xl sm:text-3xl font-bold text-[#111111] dark:text-white">
-            Welcome Back
-          </h1>
-          <p className="text-xs text-[#55564E] dark:text-[#CBD5E1] leading-relaxed">
-            Log in with your email & password to access your CV workspace.
-          </p>
+    <div>
+      <div className="space-y-1 text-center sm:text-left">
+        <span className="font-tech text-xs font-bold text-[#1845E8] uppercase tracking-wider">
+          ● CANDIDATE ACCESS
+        </span>
+        <h1 className="font-tech text-2xl sm:text-3xl font-bold text-[#111111] dark:text-white">
+          Welcome Back
+        </h1>
+        <p className="text-xs text-[#55564E] dark:text-[#CBD5E1] leading-relaxed">
+          Log in with your email & password to access your CV workspace.
+        </p>
+      </div>
+
+      <form onSubmit={handleSubmit} className="mt-6 space-y-4 font-tech text-xs">
+        <div>
+          <FieldLabel htmlFor="login-email" required>
+            Email address
+          </FieldLabel>
+          <Input
+            id="login-email"
+            type="email"
+            required
+            autoComplete="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder="you@example.com"
+            className="border-2 border-black bg-[#F9FAFB] dark:bg-[#1E2333] text-base sm:text-sm text-[#111111] dark:text-white focus:border-[#1845E8]"
+          />
         </div>
 
-        <form onSubmit={handleSubmit} className="mt-6 space-y-4 font-tech text-xs">
-          <div>
-            <FieldLabel htmlFor="login-email" required>
-              Email address
-            </FieldLabel>
+        <div>
+          <div className="mb-1.5 flex items-center justify-between">
+            <label htmlFor="login-password" className="text-xs font-bold text-[#111111] dark:text-white uppercase tracking-wider">
+              Password <span className="text-[#8F2424]">*</span>
+            </label>
+            <Link
+              href="/forgot-password"
+              className="text-xs font-bold text-[#1845E8] hover:underline"
+            >
+              Forgot password?
+            </Link>
+          </div>
+          <div className="relative">
             <Input
-              id="login-email"
-              type="email"
+              id="login-password"
+              type={showPassword ? "text" : "password"}
               required
-              autoComplete="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="you@example.com"
-              className="border-2 border-black bg-[#F9FAFB] dark:bg-[#1E2333] text-base sm:text-sm text-[#111111] dark:text-white focus:border-[#1845E8]"
+              autoComplete="current-password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="Enter your password"
+              className="border-2 border-black bg-[#F9FAFB] dark:bg-[#1E2333] pr-10 text-base sm:text-sm text-[#111111] dark:text-white focus:border-[#1845E8]"
             />
-          </div>
-
-          <div>
-            <div className="mb-1.5 flex items-center justify-between">
-              <label htmlFor="login-password" className="text-xs font-bold text-[#111111] dark:text-white uppercase tracking-wider">
-                Password <span className="text-[#8F2424]">*</span>
-              </label>
-              <Link
-                href="/forgot-password"
-                className="text-xs font-bold text-[#1845E8] hover:underline"
-              >
-                Forgot password?
-              </Link>
-            </div>
-            <div className="relative">
-              <Input
-                id="login-password"
-                type={showPassword ? "text" : "password"}
-                required
-                autoComplete="current-password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="Enter your password"
-                className="border-2 border-black bg-[#F9FAFB] dark:bg-[#1E2333] pr-10 text-base sm:text-sm text-[#111111] dark:text-white focus:border-[#1845E8]"
-              />
-              <button
-                type="button"
-                onClick={() => setShowPassword((v) => !v)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-[#77786F] hover:text-[#252821] dark:hover:text-white cursor-pointer"
-                aria-label={showPassword ? "Hide password" : "Show password"}
-              >
-                {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-              </button>
-            </div>
-          </div>
-
-          {error && (
-            <div className="rounded-lg border-2 border-red-500 bg-red-50 dark:bg-red-950/40 px-3.5 py-2.5 text-xs font-bold text-red-800 dark:text-red-200">
-              {error}
-            </div>
-          )}
-
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full inline-flex items-center justify-center rounded-xl border-2 border-black dark:border-[#333C52] bg-[#111111] dark:bg-[#1A202C] py-3.5 font-tech text-xs sm:text-sm font-bold text-white shadow-[3px_3px_0px_#1B3AFF] hover:-translate-y-0.5 hover:shadow-[4.5px_4.5px_0px_#1B3AFF] active:translate-x-[2px] active:translate-y-[2px] active:shadow-none active:scale-[0.98] transition-all cursor-pointer disabled:opacity-60 select-none"
-          >
-            {loading ? "LOGGING IN..." : "LOG IN"}
-          </button>
-        </form>
-
-        {googleEnabled && (
-          <div className="mt-4 border-t-2 border-black/10 dark:border-white/10 pt-4">
             <button
               type="button"
-              className="w-full inline-flex items-center justify-center gap-2 rounded-xl border-2 border-black dark:border-[#333C52] bg-white dark:bg-[#1E2333] py-3 font-tech text-xs font-bold text-[#111111] dark:text-white shadow-[2.5px_2.5px_0px_#111111] dark:shadow-[2.5px_2.5px_0px_#000] hover:bg-[#F3F4F6] dark:hover:bg-[#252D3F] hover:-translate-y-0.5 hover:shadow-[3.5px_3.5px_0px_#111111] active:translate-x-[2px] active:translate-y-[2px] active:shadow-none active:scale-[0.98] transition-all cursor-pointer select-none"
-              onClick={handleGoogleAuth}
+              onClick={() => setShowPassword((v) => !v)}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-[#77786F] hover:text-[#252821] dark:hover:text-white cursor-pointer"
+              aria-label={showPassword ? "Hide password" : "Show password"}
             >
-              Continue with Google
+              {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
             </button>
+          </div>
+        </div>
+
+        {error && (
+          <div className="rounded-lg border-2 border-red-500 bg-red-50 dark:bg-red-950/40 px-3.5 py-2.5 text-xs font-bold text-red-800 dark:text-red-200">
+            {error}
           </div>
         )}
 
-        <p className="mt-6 text-center text-xs font-tech text-[#55564E] dark:text-[#CBD5E1]">
-          New to Vitra?{" "}
-          <Link href="/register" className="font-bold text-[#1845E8] hover:underline">
-            Create an account
-          </Link>
-        </p>
-      </div>
-    </>
+        <button
+          type="submit"
+          disabled={loading}
+          className="w-full inline-flex items-center justify-center rounded-xl border-2 border-black dark:border-[#333C52] bg-[#111111] dark:bg-[#1A202C] py-3.5 font-tech text-xs sm:text-sm font-bold text-white shadow-[3px_3px_0px_#1B3AFF] hover:-translate-y-0.5 hover:shadow-[4.5px_4.5px_0px_#1B3AFF] active:translate-x-[2px] active:translate-y-[2px] active:shadow-none active:scale-[0.98] transition-all cursor-pointer disabled:opacity-60 select-none"
+        >
+          {loading ? "LOGGING IN..." : "LOG IN"}
+        </button>
+      </form>
+
+      {googleEnabled && (
+        <div className="mt-4 border-t-2 border-black/10 dark:border-white/10 pt-4">
+          <button
+            type="button"
+            className="w-full inline-flex items-center justify-center gap-2 rounded-xl border-2 border-black dark:border-[#333C52] bg-white dark:bg-[#1E2333] py-3 font-tech text-xs font-bold text-[#111111] dark:text-white shadow-[2.5px_2.5px_0px_#111111] dark:shadow-[2.5px_2.5px_0px_#000] hover:bg-[#F3F4F6] dark:hover:bg-[#252D3F] hover:-translate-y-0.5 hover:shadow-[3.5px_3.5px_0px_#111111] active:translate-x-[2px] active:translate-y-[2px] active:shadow-none active:scale-[0.98] transition-all cursor-pointer select-none"
+            onClick={handleGoogleAuth}
+          >
+            Continue with Google
+          </button>
+        </div>
+      )}
+
+      <p className="mt-6 text-center text-xs font-tech text-[#55564E] dark:text-[#CBD5E1]">
+        New to Vitra?{" "}
+        <Link href="/register" className="font-bold text-[#1845E8] hover:underline">
+          Create an account
+        </Link>
+      </p>
+    </div>
   );
 }
 
