@@ -51,12 +51,12 @@ export const cvService = {
     const usedCount = Math.max(cumulativeGenerated, activeCvs.length);
 
     const normalizedEmail = (user.email || "").trim().toLowerCase();
-    const isOwner = SUPERUSER_EMAILS.has(normalizedEmail) || user.role === "admin";
-    if (isOwner) {
+    const isAdmin = SUPERUSER_EMAILS.has(normalizedEmail) || user.role === "admin";
+    if (isAdmin) {
       return {
         allowed: true,
         usedCount,
-        maxCvs: 999,
+        maxCvs: 999999,
         activeCount: activeCvs.length,
       };
     }

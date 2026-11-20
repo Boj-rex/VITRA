@@ -14,8 +14,8 @@ export async function GET(
     return NextResponse.json({ ok: false, error: "Unauthorized" }, { status: 401 });
   }
 
-  // Subscription verification: Users must have an active paid subscription to download completed CVs
-  if (!user.planId || user.maxCvs <= 0) {
+  // Subscription verification: Users must have an active paid subscription to download completed CVs (Admins are always exempt)
+  if (user.role !== "admin" && (!user.planId || user.maxCvs <= 0)) {
     return NextResponse.json(
       {
         ok: false,

@@ -13,9 +13,9 @@ export const metadata = {
 export default async function MyCvsPage() {
   const user = await requireAuthenticatedUser();
   const cvs = await cvService.listCvs(user.id);
-  const hasActiveSubscription = Boolean(user.planId && user.maxCvs > 0);
+  const hasActiveSubscription = user.role === "admin" || Boolean(user.planId && user.maxCvs > 0);
   const usedCount = Math.max(user.generatedCvsCount ?? 0, cvs.length);
-  const isLimitReached = user.maxCvs > 0 && usedCount >= user.maxCvs;
+  const isLimitReached = user.role !== "admin" && user.maxCvs > 0 && usedCount >= user.maxCvs;
 
   return (
     <div className="mx-auto max-w-5xl space-y-6">

@@ -21,7 +21,7 @@ export default async function CvEditorPage({
     notFound();
   }
 
-  const hasActiveSubscription = Boolean(user.planId && user.maxCvs > 0);
+  const hasActiveSubscription = user.role === "admin" || Boolean(user.planId && user.maxCvs > 0);
 
   return <CvEditorWorkspace initialCv={cv} hasActiveSubscription={hasActiveSubscription} />;
 }

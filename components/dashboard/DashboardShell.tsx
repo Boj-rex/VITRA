@@ -106,15 +106,23 @@ function SidebarContent({
               Allowance
             </span>
             <span className="rounded-full bg-[#854D0E]/15 dark:bg-[#FBBF24]/20 px-2 py-0.5 font-bold text-[#854D0E] dark:text-[#FBBF24] text-[10px] capitalize">
-              {user.planId ? `${user.planId} (${user.maxCvs} CVs)` : "No Active Plan"}
+              {user.role === "admin"
+                ? "Admin (Unlimited)"
+                : user.planId
+                  ? `${user.planId} (${user.maxCvs} CVs)`
+                  : "No Active Plan"}
             </span>
           </div>
           <Link
-            href="/pricing"
+            href={user.role === "admin" ? "/backoffice" : "/pricing"}
             onClick={onNavigate}
             className="mt-2 block text-center font-bold text-[#111111] dark:text-white hover:underline text-[11px]"
           >
-            {user.planId ? "View / Upgrade Plan" : "Activate Package (from ₦6k)"}
+            {user.role === "admin"
+              ? "Super User Controls"
+              : user.planId
+                ? "View / Upgrade Plan"
+                : "Activate Package (from ₦6k)"}
           </Link>
         </div>
 

@@ -20,7 +20,7 @@ export default async function CreateCvPage({
   const cvs = await cvService.listCvs(user.id);
   const isEditingExisting = Boolean(cvId && cvs.some((c) => c.id === cvId));
   const usedCount = Math.max(user.generatedCvsCount ?? 0, cvs.length);
-  const isExhausted = !isEditingExisting && user.maxCvs > 0 && usedCount >= user.maxCvs;
+  const isExhausted = user.role !== "admin" && !isEditingExisting && user.maxCvs > 0 && usedCount >= user.maxCvs;
 
   if (isExhausted) {
     return (

@@ -39,9 +39,9 @@ export async function getAuthenticatedUser(): Promise<AuthenticatedUser | null> 
           .maybeSingle();
 
         const normalizedEmail = (user.email || "").trim().toLowerCase();
-        const isOwner = SUPERUSER_EMAILS.has(normalizedEmail);
-        const assignedRole: "user" | "admin" =
-          profile?.role === "admin" || isOwner ? "admin" : "user";
+        const isOwner = SUPERUSER_EMAILS.has(normalizedEmail) || profile?.role === "admin";
+        const assignedRole: "user" | "admin" = isOwner ? "admin" : "user";
+        const isAdmin = assignedRole === "admin";
 
         return {
           id: user.id,
@@ -55,10 +55,10 @@ export async function getAuthenticatedUser(): Promise<AuthenticatedUser | null> 
           emailVerified: Boolean(user.email_confirmed_at),
           role: assignedRole,
           provider: "supabase",
-          planId: (profile?.plan_id as "starter" | "pro" | "executive") || (isOwner ? "executive" : null),
-          maxCvs: isOwner ? 999 : Number(profile?.max_cvs || 0),
+          planId: isAdmin ? "executive" : ((profile?.plan_id as "starter" | "pro" | "executive") || null),
+          maxCvs: isAdmin ? 999999 : Number(profile?.max_cvs || 0),
           generatedCvsCount: Number(profile?.generated_cvs_count || 0),
-          planPurchasedAt: profile?.plan_purchased_at || (isOwner ? new Date().toISOString() : null),
+          planPurchasedAt: profile?.plan_purchased_at || (isAdmin ? new Date().toISOString() : null),
           avatarUrl: (profile?.avatar_url as string | undefined) || (user.user_metadata?.avatar_url as string | undefined) || null,
         };
       }
@@ -74,9 +74,9 @@ export async function getAuthenticatedUser(): Promise<AuthenticatedUser | null> 
       const user = localDevDb.getUserById(sessionData.userId);
       const email = user?.email || sessionData.email || "";
       const normalizedEmail = email.trim().toLowerCase();
-      const isOwner = SUPERUSER_EMAILS.has(normalizedEmail);
-      const assignedRole: "user" | "admin" =
-        user?.role === "admin" || sessionData.role === "admin" || isOwner ? "admin" : "user";
+      const isOwner = SUPERUSER_EMAILS.has(normalizedEmail) || user?.role === "admin" || sessionData.role === "admin";
+      const assignedRole: "user" | "admin" = isOwner ? "admin" : "user";
+      const isAdmin = assignedRole === "admin";
 
       return {
         id: sessionData.userId,
@@ -86,10 +86,10 @@ export async function getAuthenticatedUser(): Promise<AuthenticatedUser | null> 
         emailVerified: user?.emailVerified ?? true,
         role: assignedRole,
         provider: "local-dev",
-        planId: user?.planId || (isOwner ? "executive" : null),
-        maxCvs: isOwner ? 999 : (user?.maxCvs ?? 0),
+        planId: isAdmin ? "executive" : (user?.planId || null),
+        maxCvs: isAdmin ? 999999 : (user?.maxCvs ?? 0),
         generatedCvsCount: localDevDb.getGeneratedCvsCount(sessionData.userId),
-        planPurchasedAt: user?.planPurchasedAt || (isOwner ? new Date().toISOString() : null),
+        planPurchasedAt: user?.planPurchasedAt || (isAdmin ? new Date().toISOString() : null),
         avatarUrl: user?.avatarUrl || null,
       };
     }

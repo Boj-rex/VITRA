@@ -18,7 +18,7 @@ export default async function DashboardPage() {
   const draftCount = cvs.filter((c) => c.status === "draft").length;
   const completedCount = cvs.filter((c) => c.status === "complete").length;
   const tailoredCount = cvs.filter((c) => c.status === "tailored").length;
-  const hasActiveSubscription = Boolean(user.planId && user.maxCvs > 0);
+  const hasActiveSubscription = user.role === "admin" || Boolean(user.planId && user.maxCvs > 0);
 
   return (
     <div className="space-y-8 sm:space-y-10">
