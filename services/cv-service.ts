@@ -101,11 +101,35 @@ export const cvService = {
             .eq("user_id", userId)
             .order("updated_at", { ascending: false });
           if (!error && data && data.length > 0) {
-            return data.map(mapDbRowToCvRecord);
+            const records = data.map(mapDbRowToCvRecord);
+            if (isLocalDevModeAllowed()) {
+              for (const r of records) localDevDb.upsertCv?.(r);
+            }
+            return records;
           }
         }
       } catch (err) {
-        console.warn("Supabase listCvs error, falling back to local storage:", err);
+        console.warn("Supabase listCvs error, trying admin client:", err);
+      }
+
+      try {
+        const admin = createSupabaseAdminClient();
+        if (admin) {
+          const { data, error } = await admin
+            .from("cvs")
+            .select("*")
+            .eq("user_id", userId)
+            .order("updated_at", { ascending: false });
+          if (!error && data && data.length > 0) {
+            const records = data.map(mapDbRowToCvRecord);
+            if (isLocalDevModeAllowed()) {
+              for (const r of records) localDevDb.upsertCv?.(r);
+            }
+            return records;
+          }
+        }
+      } catch (err) {
+        console.warn("Supabase admin listCvs error, falling back to local storage:", err);
       }
     }
 
@@ -128,11 +152,36 @@ export const cvService = {
             .eq("user_id", userId)
             .maybeSingle();
           if (!error && data) {
-            return mapDbRowToCvRecord(data);
+            const record = mapDbRowToCvRecord(data);
+            if (isLocalDevModeAllowed()) {
+              localDevDb.upsertCv?.(record);
+            }
+            return record;
           }
         }
       } catch (err) {
-        console.warn("Supabase getCv error, falling back to local storage:", err);
+        console.warn("Supabase getCv error, trying admin client:", err);
+      }
+
+      try {
+        const admin = createSupabaseAdminClient();
+        if (admin) {
+          const { data, error } = await admin
+            .from("cvs")
+            .select("*")
+            .eq("id", cvId)
+            .eq("user_id", userId)
+            .maybeSingle();
+          if (!error && data) {
+            const record = mapDbRowToCvRecord(data);
+            if (isLocalDevModeAllowed()) {
+              localDevDb.upsertCv?.(record);
+            }
+            return record;
+          }
+        }
+      } catch (err) {
+        console.warn("Supabase admin getCv error, falling back to local storage:", err);
       }
     }
 
@@ -158,30 +207,53 @@ export const cvService = {
     const status = input.status || "draft";
 
     if (isSupabaseConfigured()) {
+      const insertPayload = {
+        user_id: input.userId,
+        title: input.title,
+        career_profile: input.careerProfile,
+        template_id: input.templateId,
+        structured_content: structuredContent,
+        settings,
+        status,
+        parent_cv_id: input.parentCvId ?? null,
+      };
+
       try {
         const supabase = await createSupabaseServerClient();
         if (supabase) {
           const { data, error } = await supabase
             .from("cvs")
-            .insert({
-              user_id: input.userId,
-              title: input.title,
-              career_profile: input.careerProfile,
-              template_id: input.templateId,
-              structured_content: structuredContent,
-              settings,
-              status,
-              parent_cv_id: input.parentCvId ?? null,
-            })
+            .insert(insertPayload)
             .select("*")
             .single();
           if (!error && data) {
-            return mapDbRowToCvRecord(data);
+            const rec = mapDbRowToCvRecord(data);
+            if (isLocalDevModeAllowed()) localDevDb.upsertCv?.(rec);
+            return rec;
           }
-          console.warn("Supabase createCv warning, falling back to local storage:", error?.message);
+          console.warn("Supabase createCv warning, trying admin client:", error?.message);
         }
       } catch (err) {
-        console.warn("Supabase createCv error, falling back to local storage:", err);
+        console.warn("Supabase createCv error, trying admin client:", err);
+      }
+
+      try {
+        const admin = createSupabaseAdminClient();
+        if (admin) {
+          const { data, error } = await admin
+            .from("cvs")
+            .insert(insertPayload)
+            .select("*")
+            .single();
+          if (!error && data) {
+            const rec = mapDbRowToCvRecord(data);
+            if (isLocalDevModeAllowed()) localDevDb.upsertCv?.(rec);
+            return rec;
+          }
+          console.warn("Supabase admin createCv error:", error?.message);
+        }
+      } catch (err) {
+        console.warn("Supabase admin createCv error, falling back to local storage:", err);
       }
     }
 
@@ -214,18 +286,18 @@ export const cvService = {
     }>
   ): Promise<CvRecord | null> {
     if (isSupabaseConfigured()) {
+      const updatePayload: Record<string, unknown> = {};
+      if (patch.title !== undefined) updatePayload.title = patch.title;
+      if (patch.careerProfile !== undefined) updatePayload.career_profile = patch.careerProfile;
+      if (patch.templateId !== undefined) updatePayload.template_id = patch.templateId;
+      if (patch.structuredContent !== undefined)
+        updatePayload.structured_content = patch.structuredContent;
+      if (patch.settings !== undefined) updatePayload.settings = patch.settings;
+      if (patch.status !== undefined) updatePayload.status = patch.status;
+
       try {
         const supabase = await createSupabaseServerClient();
         if (supabase) {
-          const updatePayload: Record<string, unknown> = {};
-          if (patch.title !== undefined) updatePayload.title = patch.title;
-          if (patch.careerProfile !== undefined) updatePayload.career_profile = patch.careerProfile;
-          if (patch.templateId !== undefined) updatePayload.template_id = patch.templateId;
-          if (patch.structuredContent !== undefined)
-            updatePayload.structured_content = patch.structuredContent;
-          if (patch.settings !== undefined) updatePayload.settings = patch.settings;
-          if (patch.status !== undefined) updatePayload.status = patch.status;
-
           const { data, error } = await supabase
             .from("cvs")
             .update(updatePayload)
@@ -234,12 +306,34 @@ export const cvService = {
             .select("*")
             .maybeSingle();
           if (!error && data) {
-            return mapDbRowToCvRecord(data);
+            const rec = mapDbRowToCvRecord(data);
+            if (isLocalDevModeAllowed()) localDevDb.upsertCv?.(rec);
+            return rec;
           }
-          console.warn("Supabase updateCv warning, falling back to local storage:", error?.message);
         }
       } catch (err) {
-        console.warn("Supabase updateCv error, falling back to local storage:", err);
+        console.warn("Supabase updateCv error, trying admin client fallback:", err);
+      }
+
+      try {
+        const admin = createSupabaseAdminClient();
+        if (admin) {
+          const { data, error } = await admin
+            .from("cvs")
+            .update(updatePayload)
+            .eq("id", cvId)
+            .eq("user_id", userId)
+            .select("*")
+            .maybeSingle();
+          if (!error && data) {
+            const rec = mapDbRowToCvRecord(data);
+            if (isLocalDevModeAllowed()) localDevDb.upsertCv?.(rec);
+            return rec;
+          }
+          console.warn("Supabase admin updateCv error:", error?.message);
+        }
+      } catch (err) {
+        console.warn("Supabase admin updateCv error, falling back to local storage:", err);
       }
     }
 

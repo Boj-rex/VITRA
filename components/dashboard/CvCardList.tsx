@@ -244,13 +244,21 @@ export function CvCardList({
                       </Link>
                     </>
                   ) : (
-                    <Link
-                      href={`/editor/${cv.id}`}
-                      className={buttonVariants({ variant: "primary", size: "sm" })}
-                    >
-                      <Edit3 className="h-3.5 w-3.5" />
-                      Open editor
-                    </Link>
+                    <>
+                      <Link
+                        href={`/editor/${cv.id}`}
+                        className={buttonVariants({ variant: "primary", size: "sm" })}
+                      >
+                        <Edit3 className="h-3.5 w-3.5" />
+                        Open editor
+                      </Link>
+                      <Link
+                        href={`/create/personal-information?cvId=${cv.id}`}
+                        className={buttonVariants({ variant: "outline", size: "sm" })}
+                      >
+                        Step-by-step wizard
+                      </Link>
+                    </>
                   )}
                   <Button
                     variant="outline"

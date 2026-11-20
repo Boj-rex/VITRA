@@ -11,8 +11,7 @@ function getEmailDataDir(): string {
     Boolean(process.env.VERCEL) ||
     Boolean(process.env.AWS_LAMBDA_FUNCTION_NAME) ||
     Boolean(process.env.LAMBDA_TASK_ROOT) ||
-    Boolean(process.env.NETLIFY) ||
-    process.env.NODE_ENV === "production";
+    Boolean(process.env.NETLIFY);
 
   if (isServerless) {
     return path.join(os.tmpdir(), ".vitra-dev-data");

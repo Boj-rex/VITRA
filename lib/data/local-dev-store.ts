@@ -9,6 +9,7 @@ import type {
   JobTailoringResult,
   StructuredCvContent,
 } from "@/types/cv";
+import { createEmptyStructuredCv, createDefaultEditorSettings } from "@/lib/cv/defaults";
 
 export interface LocalUser {
   id: string;
@@ -972,14 +973,30 @@ export const localDevDb = {
     return cv;
   },
 
+  upsertCv(record: CvRecord): void {
+    const data = ensureStore();
+    const idx = data.cvs.findIndex((c) => c.id === record.id);
+    if (idx >= 0) {
+      data.cvs[idx] = { ...data.cvs[idx], ...record, updatedAt: record.updatedAt || new Date().toISOString() };
+    } else {
+      data.cvs.push({ ...record });
+    }
+    writeStore(data);
+  },
+
   updateCv(
     cvId: string,
     userId: string,
     patch: Partial<Pick<CvRecord, "title" | "careerProfile" | "templateId" | "structuredContent" | "settings" | "status">>
   ): CvRecord | null {
     const data = ensureStore();
+    // Strict cross-user isolation: if CV exists and belongs to someone else, reject immediately
+    const otherUserCv = data.cvs.find((c) => c.id === cvId && c.userId !== userId);
+    if (otherUserCv) return null;
+
     const cv = data.cvs.find((c) => c.id === cvId && c.userId === userId);
     if (!cv) return null;
+
     if (patch.title !== undefined) cv.title = patch.title;
     if (patch.careerProfile !== undefined) cv.careerProfile = patch.careerProfile;
     if (patch.templateId !== undefined) cv.templateId = patch.templateId;

@@ -711,7 +711,8 @@ describe("Scenario E, G & H: Tailoring Comparison, Cross-User Isolation & Progre
     expect(receiptEmail.savedLocally).toBe(true);
 
     // Verify receipt email persistence file
-    const receiptFile = path.join(process.cwd(), ".vitra-dev-data", "receipt-emails.json");
+    const receiptDir = process.env.VITRA_DEV_DATA_DIR || path.join(process.cwd(), ".vitra-dev-data");
+    const receiptFile = path.join(receiptDir, "receipt-emails.json");
     expect(fs.existsSync(receiptFile)).toBe(true);
     const savedReceipts = JSON.parse(fs.readFileSync(receiptFile, "utf8"));
     const foundReceipt = savedReceipts.find((r: any) => r.reference === checkout.reference);

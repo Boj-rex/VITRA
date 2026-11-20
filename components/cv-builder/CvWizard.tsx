@@ -167,14 +167,15 @@ export function CvWizard({ initialStep = "profile" }: { initialStep?: WizardStep
 
     if (!effectiveCvId) {
       setInitialLoaded(true);
-      // Check if user has an existing unfinished draft they can resume
+      // Check if user has an existing unfinished draft or completed CV they can resume/edit
       fetch("/api/cvs")
         .then((r) => r.json())
         .then((d) => {
-          if (d.ok && Array.isArray(d.cvs)) {
+          if (d.ok && Array.isArray(d.cvs) && d.cvs.length > 0) {
             const draft = d.cvs.find((c: CvRecord) => c.status === "draft");
-            if (draft) {
-              setResumePrompt({ id: draft.id, title: draft.title, updatedAt: draft.updatedAt });
+            const target = draft || d.cvs[0];
+            if (target) {
+              setResumePrompt({ id: target.id, title: target.title, updatedAt: target.updatedAt });
             }
           }
         })
@@ -669,10 +670,10 @@ export function CvWizard({ initialStep = "profile" }: { initialStep?: WizardStep
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 rounded-xl border-2 border-[#173B30] dark:border-[#34D399] bg-[#E8F5E9] dark:bg-[#0E2E23] p-4 text-xs font-tech shadow-sticker-sm">
           <div>
             <p className="font-bold text-[#173B30] dark:text-[#34D399]">
-              Continue previous draft: <span className="underline">{resumePrompt.title}</span>?
+              Edit saved CV: <span className="underline">{resumePrompt.title}</span>?
             </p>
             <p className="text-[#55564E] dark:text-[#CBD5E1] text-[11px] mt-0.5">
-              You were recently working on this CV. You can resume where you left off or start fresh.
+              You have a saved CV in your account. You can load it here in the step-by-step editor or start fresh.
             </p>
           </div>
           <div className="flex items-center gap-2 shrink-0">
@@ -705,7 +706,7 @@ export function CvWizard({ initialStep = "profile" }: { initialStep?: WizardStep
                   .finally(() => setLoadingDraft(false));
               }}
             >
-              Resume draft
+              Load in editor
             </Button>
             <Button
               type="button"
