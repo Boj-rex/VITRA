@@ -105,7 +105,7 @@ export function CvEditorWorkspace({
           }
         }
       })
-      .catch(() => {});
+      .catch(() => { });
   }, []);
 
   // New skill quick input & preview zoom/bullet drafts
@@ -273,7 +273,7 @@ export function CvEditorWorkspace({
       if (typeof window !== "undefined" && updated.id) {
         try {
           sessionStorage.setItem(`vitra_cv_draft_${updated.id}`, JSON.stringify(updated));
-        } catch {}
+        } catch { }
       }
       return updated;
     });
@@ -289,7 +289,7 @@ export function CvEditorWorkspace({
       if (typeof window !== "undefined" && updated.id) {
         try {
           sessionStorage.setItem(`vitra_cv_draft_${updated.id}`, JSON.stringify(updated));
-        } catch {}
+        } catch { }
       }
       return updated;
     });
@@ -2500,8 +2500,8 @@ export function CvEditorWorkspace({
                 {aiBusy === "tailor"
                   ? "Comparing role..."
                   : atsEngineChoice === "hardcoded"
-                  ? "Analyze role with Rule-Based ATS (Instant)"
-                  : "Analyze role with AI Writing Engine"}
+                    ? "Analyze role with Rule-Based ATS (Instant)"
+                    : "Analyze role with AI Writing Engine"}
               </Button>
 
               {deterministicMatch && (
