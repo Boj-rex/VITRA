@@ -162,7 +162,7 @@ export function CvWizard({ initialStep = "profile" }: { initialStep?: WizardStep
             setCvId(effectiveCvId);
           }
         }
-      } catch {}
+      } catch { }
     }
 
     if (!effectiveCvId) {
@@ -208,7 +208,7 @@ export function CvWizard({ initialStep = "profile" }: { initialStep?: WizardStep
                   updatedAt: Date.now(),
                 })
               );
-            } catch {}
+            } catch { }
             if (!queryCvId) {
               window.history.replaceState(null, "", `/create/${step}?cvId=${rec.id}`);
             }
@@ -299,7 +299,7 @@ export function CvWizard({ initialStep = "profile" }: { initialStep?: WizardStep
                   updatedAt: Date.now(),
                 })
               );
-            } catch {}
+            } catch { }
           }
           window.history.replaceState(null, "", `/create/${step}?cvId=${createdId}`);
           return createdId;
@@ -349,7 +349,7 @@ export function CvWizard({ initialStep = "profile" }: { initialStep?: WizardStep
                         updatedAt: Date.now(),
                       })
                     );
-                  } catch {}
+                  } catch { }
                 }
                 window.history.replaceState(null, "", `/create/${step}?cvId=${newId}`);
                 return newId;
@@ -373,7 +373,7 @@ export function CvWizard({ initialStep = "profile" }: { initialStep?: WizardStep
                   updatedAt: Date.now(),
                 })
               );
-            } catch {}
+            } catch { }
           }
           return cvId;
         }
@@ -759,8 +759,8 @@ export function CvWizard({ initialStep = "profile" }: { initialStep?: WizardStep
       {aiNotice && (
         <div
           className={`rounded-lg border px-4 py-3 text-sm ${aiNotice.type === "error"
-              ? "border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-950/40 text-amber-900 dark:text-amber-200"
-              : "border-[#173B30]/30 dark:border-[#34D399]/40 bg-[#173B30]/8 dark:bg-[#0E2E23]/60 text-[#173B30] dark:text-[#34D399]"
+            ? "border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-950/40 text-amber-900 dark:text-amber-200"
+            : "border-[#173B30]/30 dark:border-[#34D399]/40 bg-[#173B30]/8 dark:bg-[#0E2E23]/60 text-[#173B30] dark:text-[#34D399]"
             }`}
         >
           {aiNotice.text}
