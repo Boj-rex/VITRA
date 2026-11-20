@@ -24,6 +24,7 @@ import {
 import { Badge, Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { FieldLabel, Input, Select, Textarea } from "@/components/ui/input";
+import { CommaSeparatedInput } from "@/components/ui/comma-separated-input";
 import { CvDocumentPreview } from "@/components/templates/CvDocumentPreview";
 import { SubscriptionRequiredModal } from "@/components/billing/SubscriptionRequiredModal";
 import {
@@ -1727,17 +1728,14 @@ export function CvEditorWorkspace({
                 <div className="grid gap-2.5 sm:grid-cols-2">
                   <div>
                     <FieldLabel hint="Comma-separated">Languages</FieldLabel>
-                    <Input
-                      value={cv.structuredContent.additional.languages.join(", ")}
-                      onChange={(e) =>
+                    <CommaSeparatedInput
+                      value={cv.structuredContent.additional.languages}
+                      onChange={(languages) =>
                         updateContent((c) => ({
                           ...c,
                           additional: {
                             ...c.additional,
-                            languages: e.target.value
-                              .split(",")
-                              .map((s) => s.trim())
-                              .filter(Boolean),
+                            languages,
                           },
                         }))
                       }
@@ -1746,17 +1744,14 @@ export function CvEditorWorkspace({
                   </div>
                   <div>
                     <FieldLabel hint="Comma-separated">Awards</FieldLabel>
-                    <Input
-                      value={cv.structuredContent.additional.awards.join(", ")}
-                      onChange={(e) =>
+                    <CommaSeparatedInput
+                      value={cv.structuredContent.additional.awards}
+                      onChange={(awards) =>
                         updateContent((c) => ({
                           ...c,
                           additional: {
                             ...c.additional,
-                            awards: e.target.value
-                              .split(",")
-                              .map((s) => s.trim())
-                              .filter(Boolean),
+                            awards,
                           },
                         }))
                       }
@@ -1765,17 +1760,14 @@ export function CvEditorWorkspace({
                   </div>
                   <div>
                     <FieldLabel hint="Comma-separated">Memberships</FieldLabel>
-                    <Input
-                      value={cv.structuredContent.additional.memberships.join(", ")}
-                      onChange={(e) =>
+                    <CommaSeparatedInput
+                      value={cv.structuredContent.additional.memberships}
+                      onChange={(memberships) =>
                         updateContent((c) => ({
                           ...c,
                           additional: {
                             ...c.additional,
-                            memberships: e.target.value
-                              .split(",")
-                              .map((s) => s.trim())
-                              .filter(Boolean),
+                            memberships,
                           },
                         }))
                       }
@@ -1784,17 +1776,14 @@ export function CvEditorWorkspace({
                   </div>
                   <div>
                     <FieldLabel hint="Comma-separated">Interests</FieldLabel>
-                    <Input
-                      value={cv.structuredContent.additional.interests.join(", ")}
-                      onChange={(e) =>
+                    <CommaSeparatedInput
+                      value={cv.structuredContent.additional.interests}
+                      onChange={(interests) =>
                         updateContent((c) => ({
                           ...c,
                           additional: {
                             ...c.additional,
-                            interests: e.target.value
-                              .split(",")
-                              .map((s) => s.trim())
-                              .filter(Boolean),
+                            interests,
                           },
                         }))
                       }
@@ -1803,17 +1792,14 @@ export function CvEditorWorkspace({
                   </div>
                   <div className="sm:col-span-2">
                     <FieldLabel hint="Comma-separated">Publications</FieldLabel>
-                    <Input
-                      value={cv.structuredContent.additional.publications.join(", ")}
-                      onChange={(e) =>
+                    <CommaSeparatedInput
+                      value={cv.structuredContent.additional.publications}
+                      onChange={(publications) =>
                         updateContent((c) => ({
                           ...c,
                           additional: {
                             ...c.additional,
-                            publications: e.target.value
-                              .split(",")
-                              .map((s) => s.trim())
-                              .filter(Boolean),
+                            publications,
                           },
                         }))
                       }

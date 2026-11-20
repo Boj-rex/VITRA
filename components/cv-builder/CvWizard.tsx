@@ -14,6 +14,7 @@ import {
 import { Badge, Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { FieldLabel, Input, Select, Textarea } from "@/components/ui/input";
+import { CommaSeparatedInput } from "@/components/ui/comma-separated-input";
 import { CvDocumentPreview } from "@/components/templates/CvDocumentPreview";
 import {
   CAREER_PROFILES,
@@ -2118,18 +2119,15 @@ export function CvWizard({ initialStep = "profile" }: { initialStep?: WizardStep
                 <FieldLabel htmlFor="add-languages" hint="Comma-separated">
                   Languages spoken
                 </FieldLabel>
-                <Input
+                <CommaSeparatedInput
                   id="add-languages"
-                  value={content.additional.languages.join(", ")}
-                  onChange={(e) =>
+                  value={content.additional.languages}
+                  onChange={(languages) =>
                     setContent((p) => ({
                       ...p,
                       additional: {
                         ...p.additional,
-                        languages: e.target.value
-                          .split(",")
-                          .map((s) => s.trim())
-                          .filter(Boolean),
+                        languages,
                       },
                     }))
                   }
@@ -2141,18 +2139,15 @@ export function CvWizard({ initialStep = "profile" }: { initialStep?: WizardStep
                 <FieldLabel htmlFor="add-awards" hint="Comma-separated">
                   Awards & honours
                 </FieldLabel>
-                <Input
+                <CommaSeparatedInput
                   id="add-awards"
-                  value={content.additional.awards.join(", ")}
-                  onChange={(e) =>
+                  value={content.additional.awards}
+                  onChange={(awards) =>
                     setContent((p) => ({
                       ...p,
                       additional: {
                         ...p.additional,
-                        awards: e.target.value
-                          .split(",")
-                          .map((s) => s.trim())
-                          .filter(Boolean),
+                        awards,
                       },
                     }))
                   }
@@ -2164,18 +2159,15 @@ export function CvWizard({ initialStep = "profile" }: { initialStep?: WizardStep
                 <FieldLabel htmlFor="add-memberships" hint="Comma-separated">
                   Professional memberships
                 </FieldLabel>
-                <Input
+                <CommaSeparatedInput
                   id="add-memberships"
-                  value={content.additional.memberships.join(", ")}
-                  onChange={(e) =>
+                  value={content.additional.memberships}
+                  onChange={(memberships) =>
                     setContent((p) => ({
                       ...p,
                       additional: {
                         ...p.additional,
-                        memberships: e.target.value
-                          .split(",")
-                          .map((s) => s.trim())
-                          .filter(Boolean),
+                        memberships,
                       },
                     }))
                   }
@@ -2187,18 +2179,15 @@ export function CvWizard({ initialStep = "profile" }: { initialStep?: WizardStep
                 <FieldLabel htmlFor="add-interests" hint="Comma-separated">
                   Interests / extracurriculars
                 </FieldLabel>
-                <Input
+                <CommaSeparatedInput
                   id="add-interests"
-                  value={content.additional.interests.join(", ")}
-                  onChange={(e) =>
+                  value={content.additional.interests}
+                  onChange={(interests) =>
                     setContent((p) => ({
                       ...p,
                       additional: {
                         ...p.additional,
-                        interests: e.target.value
-                          .split(",")
-                          .map((s) => s.trim())
-                          .filter(Boolean),
+                        interests,
                       },
                     }))
                   }
@@ -2210,18 +2199,15 @@ export function CvWizard({ initialStep = "profile" }: { initialStep?: WizardStep
                 <FieldLabel htmlFor="add-publications" hint="Comma-separated">
                   Publications or research papers
                 </FieldLabel>
-                <Input
+                <CommaSeparatedInput
                   id="add-publications"
-                  value={content.additional.publications.join(", ")}
-                  onChange={(e) =>
+                  value={content.additional.publications}
+                  onChange={(publications) =>
                     setContent((p) => ({
                       ...p,
                       additional: {
                         ...p.additional,
-                        publications: e.target.value
-                          .split(",")
-                          .map((s) => s.trim())
-                          .filter(Boolean),
+                        publications,
                       },
                     }))
                   }
