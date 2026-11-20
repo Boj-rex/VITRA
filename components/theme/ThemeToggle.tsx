@@ -9,6 +9,33 @@ interface ThemeToggleProps {
   variant?: "floating" | "navbar" | "segmented" | "compact";
 }
 
+/**
+ * Calculates whether the current time of day is daytime (Light) or nighttime (Dark).
+ * Daytime: 6:00 AM to 5:59 PM (06:00 - 17:59) -> Light Mode (Moon Sand)
+ * Evening/Nighttime: 6:00 PM to 5:59 AM (18:00 - 05:59) -> Dark Mode (Obsidian)
+ */
+export function getTimeBasedTheme(): "light" | "dark" {
+  if (typeof window === "undefined") return "light";
+  const hour = new Date().getHours();
+  return hour >= 6 && hour < 18 ? "light" : "dark";
+}
+
+function applyThemeToDom(mode: "light" | "dark") {
+  const root = document.documentElement;
+  const body = document.body;
+  if (mode === "dark") {
+    root.classList.add("dark");
+    body.classList.add("dark");
+    root.setAttribute("data-theme", "dark");
+    body.setAttribute("data-theme", "dark");
+  } else {
+    root.classList.remove("dark");
+    body.classList.remove("dark");
+    root.setAttribute("data-theme", "light");
+    body.setAttribute("data-theme", "light");
+  }
+}
+
 export function ThemeToggle({ className, variant = "navbar" }: ThemeToggleProps) {
   const [theme, setTheme] = useState<"light" | "dark">("light");
   const [mounted, setMounted] = useState(false);
@@ -17,59 +44,59 @@ export function ThemeToggle({ className, variant = "navbar" }: ThemeToggleProps)
   useEffect(() => {
     setMounted(true);
     const root = document.documentElement;
-    const body = document.body;
 
-    const saved = typeof window !== "undefined" ? localStorage.getItem("vitra_theme") : null;
-    const prefersDark =
-      typeof window !== "undefined" && window.matchMedia("(prefers-color-scheme: dark)").matches;
-    const isDark = saved === "dark" || (!saved && prefersDark);
+    const sessionTheme =
+      typeof window !== "undefined" ? sessionStorage.getItem("vitra_theme") : null;
+    const initialTheme: "light" | "dark" =
+      sessionTheme === "dark" || sessionTheme === "light"
+        ? sessionTheme
+        : getTimeBasedTheme();
 
-    if (isDark) {
-      root.classList.add("dark");
-      body.classList.add("dark");
-      root.setAttribute("data-theme", "dark");
-      body.setAttribute("data-theme", "dark");
-      setTheme("dark");
-    } else {
-      root.classList.remove("dark");
-      body.classList.remove("dark");
-      root.setAttribute("data-theme", "light");
-      body.setAttribute("data-theme", "light");
-      setTheme("light");
-    }
+    applyThemeToDom(initialTheme);
+    setTheme(initialTheme);
+
+    // Periodic check to adjust smoothly across 6am / 6pm if user hasn't set a manual session choice
+    const syncTimeTheme = () => {
+      const hasManualSession = Boolean(sessionStorage.getItem("vitra_theme"));
+      if (!hasManualSession) {
+        const expected = getTimeBasedTheme();
+        const currentIsDark =
+          root.classList.contains("dark") || root.getAttribute("data-theme") === "dark";
+        const currentTheme = currentIsDark ? "dark" : "light";
+        if (currentTheme !== expected) {
+          applyThemeToDom(expected);
+          setTheme(expected);
+        }
+      }
+    };
+
+    const intervalId = setInterval(syncTimeTheme, 60000);
+    document.addEventListener("visibilitychange", syncTimeTheme);
 
     const handleThemeChange = (e: Event) => {
       const customTheme = (e as CustomEvent)?.detail?.theme;
       if (customTheme) {
         setTheme(customTheme);
       } else {
-        const darkNow = root.classList.contains("dark") || root.getAttribute("data-theme") === "dark";
+        const darkNow =
+          root.classList.contains("dark") || root.getAttribute("data-theme") === "dark";
         setTheme(darkNow ? "dark" : "light");
       }
     };
 
     window.addEventListener("vitra:theme-changed", handleThemeChange);
-    return () => window.removeEventListener("vitra:theme-changed", handleThemeChange);
+    return () => {
+      window.removeEventListener("vitra:theme-changed", handleThemeChange);
+      document.removeEventListener("visibilitychange", syncTimeTheme);
+      clearInterval(intervalId);
+    };
   }, []);
 
   const setThemeMode = (mode: "light" | "dark") => {
-    const root = document.documentElement;
-    const body = document.body;
-
-    if (mode === "dark") {
-      root.classList.add("dark");
-      body.classList.add("dark");
-      root.setAttribute("data-theme", "dark");
-      body.setAttribute("data-theme", "dark");
-    } else {
-      root.classList.remove("dark");
-      body.classList.remove("dark");
-      root.setAttribute("data-theme", "light");
-      body.setAttribute("data-theme", "light");
-    }
+    applyThemeToDom(mode);
 
     try {
-      localStorage.setItem("vitra_theme", mode);
+      sessionStorage.setItem("vitra_theme", mode);
     } catch {
       // safe catch
     }

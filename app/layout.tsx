@@ -1,6 +1,5 @@
 import type { Metadata, Viewport } from "next";
 import Script from "next/script";
-import { ScreenCaptureProtection } from "@/components/security/ScreenCaptureProtection";
 import { CookieConsentBanner } from "@/components/legal/CookieConsentBanner";
 import { FloatingSupportWidget } from "@/components/support/FloatingSupportWidget";
 import { RootStructuredData } from "@/components/seo/JsonLd";
@@ -156,12 +155,10 @@ export default function RootLayout({
         suppressHydrationWarning
         className="min-h-full bg-moon-sand text-[#252821] dark:text-[#F1F5F9] font-sans flex flex-col selection:bg-[#173B30] selection:text-[#FFFEFA]"
       >
-        <ScreenCaptureProtection>
-          <RootStructuredData />
-          {children}
-          <CookieConsentBanner />
-          <FloatingSupportWidget />
-        </ScreenCaptureProtection>
+        <RootStructuredData />
+        {children}
+        <CookieConsentBanner />
+        <FloatingSupportWidget />
       </body>
     </html>
   );
