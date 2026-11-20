@@ -10,11 +10,17 @@ export const metadata = {
   title: "Create a CV — Vitra",
 };
 
-export default async function CreateCvPage() {
+export default async function CreateCvPage({
+  searchParams,
+}: {
+  searchParams?: Promise<{ cvId?: string }>;
+}) {
   const user = await requireAuthenticatedUser("/login");
+  const { cvId } = (await searchParams) || {};
   const cvs = await cvService.listCvs(user.id);
+  const isEditingExisting = Boolean(cvId && cvs.some((c) => c.id === cvId));
   const usedCount = Math.max(user.generatedCvsCount ?? 0, cvs.length);
-  const isExhausted = user.maxCvs > 0 && usedCount >= user.maxCvs;
+  const isExhausted = !isEditingExisting && user.maxCvs > 0 && usedCount >= user.maxCvs;
 
   if (isExhausted) {
     return (

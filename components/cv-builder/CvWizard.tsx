@@ -105,12 +105,63 @@ export function CvWizard({ initialStep = "profile" }: { initialStep?: WizardStep
   const [initialLoaded, setInitialLoaded] = useState(false);
   const [resumePrompt, setResumePrompt] = useState<{ id: string; title: string; updatedAt: string } | null>(null);
   const hasUserModified = useRef(false);
+  const hasLoadedInitialDraft = useRef(false);
 
-  // Load existing draft on mount if cvId is present in URL or cached in session
+  // Sync internal step state if parent or route changes initialStep
   useEffect(() => {
+    if (initialStep && initialStep !== step) {
+      setStep(initialStep);
+    }
+  }, [initialStep]);
+
+  // Handle browser back/forward buttons (popstate)
+  useEffect(() => {
+    const onPopState = () => {
+      const pathParts = window.location.pathname.split("/");
+      const stepFromPath = pathParts[pathParts.length - 1] as WizardStepKey;
+      const validSteps: WizardStepKey[] = [
+        "profile",
+        "personal-information",
+        "summary",
+        "education",
+        "experience",
+        "skills",
+        "projects",
+      ];
+      if (validSteps.includes(stepFromPath)) {
+        setStep(stepFromPath);
+      }
+    };
+    window.addEventListener("popstate", onPopState);
+    return () => window.removeEventListener("popstate", onPopState);
+  }, []);
+
+  // Load existing draft ONCE on initial mount if cvId is present in URL or cached in session
+  useEffect(() => {
+    if (hasLoadedInitialDraft.current) return;
+    hasLoadedInitialDraft.current = true;
+
     let effectiveCvId = queryCvId;
     if (!effectiveCvId && typeof window !== "undefined") {
       effectiveCvId = sessionStorage.getItem("vitra_active_cv_id");
+    }
+
+    // Try restoring immediately from local session draft cache if available
+    if (typeof window !== "undefined" && effectiveCvId) {
+      try {
+        const cachedStr = sessionStorage.getItem(`vitra_cv_draft_${effectiveCvId}`);
+        if (cachedStr) {
+          const cached = JSON.parse(cachedStr);
+          if (cached?.content) {
+            setContent(cached.content);
+            if (cached.careerProfile) setCareerProfile(cached.careerProfile);
+            if (cached.templateId) setTemplateId(cached.templateId);
+            if (cached.settings) setSettings(cached.settings);
+            if (cached.title) setTitle(cached.title);
+            setCvId(effectiveCvId);
+          }
+        }
+      } catch {}
     }
 
     if (!effectiveCvId) {
@@ -143,6 +194,19 @@ export function CvWizard({ initialStep = "profile" }: { initialStep?: WizardStep
           setSettings(rec.settings);
           if (typeof window !== "undefined") {
             sessionStorage.setItem("vitra_active_cv_id", rec.id);
+            try {
+              sessionStorage.setItem(
+                `vitra_cv_draft_${rec.id}`,
+                JSON.stringify({
+                  content: rec.structuredContent,
+                  careerProfile: rec.careerProfile,
+                  templateId: rec.templateId,
+                  settings: rec.settings,
+                  title: rec.title,
+                  updatedAt: Date.now(),
+                })
+              );
+            } catch {}
             if (!queryCvId) {
               window.history.replaceState(null, "", `/create/${step}?cvId=${rec.id}`);
             }
@@ -162,7 +226,7 @@ export function CvWizard({ initialStep = "profile" }: { initialStep?: WizardStep
         setLoadingDraft(false);
         setTimeout(() => setInitialLoaded(true), 400);
       });
-  }, [queryCvId, step]);
+  }, [queryCvId]);
 
   // Pre-fill user's name and email on brand-new CV if empty
   useEffect(() => {
@@ -221,6 +285,19 @@ export function CvWizard({ initialStep = "profile" }: { initialStep?: WizardStep
           setSaveState("saved");
           if (typeof window !== "undefined") {
             sessionStorage.setItem("vitra_active_cv_id", createdId);
+            try {
+              sessionStorage.setItem(
+                `vitra_cv_draft_${createdId}`,
+                JSON.stringify({
+                  content: nextContent,
+                  careerProfile: nextProfile,
+                  templateId: nextTemplate,
+                  settings: nextSettings,
+                  title: nextTitle,
+                  updatedAt: Date.now(),
+                })
+              );
+            } catch {}
           }
           window.history.replaceState(null, "", `/create/${step}?cvId=${createdId}`);
           return createdId;
@@ -258,6 +335,19 @@ export function CvWizard({ initialStep = "profile" }: { initialStep?: WizardStep
                 setSaveState("saved");
                 if (typeof window !== "undefined") {
                   sessionStorage.setItem("vitra_active_cv_id", newId);
+                  try {
+                    sessionStorage.setItem(
+                      `vitra_cv_draft_${newId}`,
+                      JSON.stringify({
+                        content: nextContent,
+                        careerProfile: nextProfile,
+                        templateId: nextTemplate,
+                        settings: nextSettings,
+                        title: nextTitle,
+                        updatedAt: Date.now(),
+                      })
+                    );
+                  } catch {}
                 }
                 window.history.replaceState(null, "", `/create/${step}?cvId=${newId}`);
                 return newId;
@@ -267,6 +357,22 @@ export function CvWizard({ initialStep = "profile" }: { initialStep?: WizardStep
             return cvId;
           }
           setSaveState("saved");
+          if (typeof window !== "undefined" && cvId) {
+            sessionStorage.setItem("vitra_active_cv_id", cvId);
+            try {
+              sessionStorage.setItem(
+                `vitra_cv_draft_${cvId}`,
+                JSON.stringify({
+                  content: nextContent,
+                  careerProfile: nextProfile,
+                  templateId: nextTemplate,
+                  settings: nextSettings,
+                  title: nextTitle,
+                  updatedAt: Date.now(),
+                })
+              );
+            } catch {}
+          }
           return cvId;
         }
       } catch {
@@ -359,7 +465,7 @@ export function CvWizard({ initialStep = "profile" }: { initialStep?: WizardStep
     const savedId = await persistCv(content, careerProfile, templateId, settings, dynamicTitle);
     setStep(targetStep);
     const idParam = savedId ? `?cvId=${savedId}` : "";
-    window.history.replaceState(null, "", `/create/${targetStep}${idParam}`);
+    window.history.pushState(null, "", `/create/${targetStep}${idParam}`);
   }
 
   async function handleFinishToEditor() {

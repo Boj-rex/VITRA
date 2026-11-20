@@ -19,18 +19,22 @@ const VALID_STEPS: WizardStepKey[] = [
 
 export default async function CreateCvStepPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ step: string }>;
+  searchParams?: Promise<{ cvId?: string }>;
 }) {
   const { step } = await params;
   if (!VALID_STEPS.includes(step as WizardStepKey)) {
     notFound();
   }
 
+  const { cvId } = (await searchParams) || {};
   const user = await requireAuthenticatedUser("/login");
   const cvs = await cvService.listCvs(user.id);
+  const isEditingExisting = Boolean(cvId && cvs.some((c) => c.id === cvId));
   const usedCount = Math.max(user.generatedCvsCount ?? 0, cvs.length);
-  const isExhausted = user.maxCvs > 0 && usedCount >= user.maxCvs;
+  const isExhausted = !isEditingExisting && user.maxCvs > 0 && usedCount >= user.maxCvs;
 
   if (isExhausted) {
     return (

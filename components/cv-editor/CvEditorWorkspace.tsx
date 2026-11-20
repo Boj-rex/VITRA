@@ -220,7 +220,12 @@ export function CvEditorWorkspace({
     []
   );
 
-  // Debounced autosave
+  // Debounced autosave with instant flush on leave/unmount
+  const cvRef = useRef(cv);
+  useEffect(() => {
+    cvRef.current = cv;
+  }, [cv]);
+
   const isFirstRender = useRef(true);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   useEffect(() => {
@@ -237,18 +242,57 @@ export function CvEditorWorkspace({
     };
   }, [cv, persistNow]);
 
+  // Flush pending changes when switching tabs, closing tab, or unmounting
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "hidden") {
+        persistNow(cvRef.current);
+      }
+    };
+    const handleBeforeUnload = () => {
+      persistNow(cvRef.current);
+    };
+
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+
+    return () => {
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+      persistNow(cvRef.current);
+    };
+  }, [persistNow]);
+
   function updateContent(updater: (prev: StructuredCvContent) => StructuredCvContent) {
-    setCv((prev) => ({
-      ...prev,
-      structuredContent: updater(prev.structuredContent),
-    }));
+    setCv((prev) => {
+      const nextContent = updater(prev.structuredContent);
+      const updated = {
+        ...prev,
+        structuredContent: nextContent,
+      };
+      if (typeof window !== "undefined" && updated.id) {
+        try {
+          sessionStorage.setItem(`vitra_cv_draft_${updated.id}`, JSON.stringify(updated));
+        } catch {}
+      }
+      return updated;
+    });
   }
 
   function updateSettings(updater: (prev: CvEditorSettings) => CvEditorSettings) {
-    setCv((prev) => ({
-      ...prev,
-      settings: updater(prev.settings),
-    }));
+    setCv((prev) => {
+      const nextSettings = updater(prev.settings);
+      const updated = {
+        ...prev,
+        settings: nextSettings,
+      };
+      if (typeof window !== "undefined" && updated.id) {
+        try {
+          sessionStorage.setItem(`vitra_cv_draft_${updated.id}`, JSON.stringify(updated));
+        } catch {}
+      }
+      return updated;
+    });
   }
 
   async function handleExport(format: "pdf" | "docx") {
@@ -475,6 +519,15 @@ export function CvEditorWorkspace({
           >
             <FolderKanban className="h-3.5 w-3.5" />
             My CVs
+          </Link>
+          <Link
+            href={`/create/personal-information?cvId=${cv.id}`}
+            onClick={() => persistNow(cv)}
+            className="inline-flex items-center gap-1.5 rounded-lg border border-black/15 dark:border-white/20 bg-white dark:bg-[#1E2333] px-2.5 py-1.5 text-xs font-bold text-[#111111] dark:text-white shadow-sm hover:bg-[#F3F4F6] dark:hover:bg-[#252B3E] transition-all cursor-pointer"
+            title="Jump back into the guided step-by-step wizard"
+          >
+            <SlidersHorizontal className="h-3.5 w-3.5 text-[#173B30] dark:text-[#34D399]" />
+            <span>Step-by-Step Wizard</span>
           </Link>
           <Input
             value={cv.title}
