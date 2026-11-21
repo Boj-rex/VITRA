@@ -11,13 +11,15 @@ interface ThemeToggleProps {
 
 /**
  * Calculates whether the current time of day is daytime (Light) or nighttime (Dark).
- * Daytime: 6:00 AM to 5:59 PM (06:00 - 17:59) -> Light Mode (Moon Sand)
- * Evening/Nighttime: 6:00 PM to 5:59 AM (18:00 - 05:59) -> Dark Mode (Obsidian)
+ * Daytime: 6:59 AM to 5:59 PM (06:59 - 17:59) -> Light Mode (Moon Sand)
+ * Evening/Nighttime: 6:00 PM to 7:00 AM (18:00 - 06:58) -> 75% Obsidian Black Dark Mode
  */
 export function getTimeBasedTheme(): "light" | "dark" {
   if (typeof window === "undefined") return "light";
-  const hour = new Date().getHours();
-  return hour >= 6 && hour < 18 ? "light" : "dark";
+  const now = new Date();
+  const minutes = now.getHours() * 60 + now.getMinutes();
+  // 6:59 AM = 419 minutes; 5:59 PM (17:59) = 1079 minutes; 6:00 PM (18:00) = 1080 minutes
+  return minutes >= 419 && minutes < 1080 ? "light" : "dark";
 }
 
 function applyThemeToDom(mode: "light" | "dark") {

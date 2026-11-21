@@ -8,10 +8,13 @@
       theme = sessionTheme;
     } else {
       // 2. Open in light or dark mode depending on the local time of day:
-      // Daytime (6:00 AM to 5:59 PM): Light Mode (Moon Sand)
-      // Evening/Night (6:00 PM to 5:59 AM): Dark Mode (Obsidian)
-      var hour = new Date().getHours();
-      theme = (hour >= 6 && hour < 18) ? 'light' : 'dark';
+      // Daytime (6:59 AM to 5:59 PM): Light Mode (Moon Sand)
+      // Evening/Nighttime (6:00 PM to 7:00 AM): 75% Obsidian Black Dark Mode
+      var now = new Date();
+      var minutes = now.getHours() * 60 + now.getMinutes();
+      // 6:59 AM = 6 * 60 + 59 = 419 minutes
+      // 5:59 PM (17:59) = 17 * 60 + 59 = 1079 minutes; 6:00 PM (18:00) = 1080 minutes
+      theme = (minutes >= 419 && minutes < 1080) ? 'light' : 'dark';
     }
 
     var root = document.documentElement;
